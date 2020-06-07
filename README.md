@@ -32,5 +32,5 @@ numOfReviewers:
 
 ### Note 
 - If no one is available, assign to those who are available on the next day
-- If PR has some reviewer before this action, num of reviewers assigned by this action will be (numOfReviwers) - (num of exiting reviewers)   
+- Assume no reviewers are assigned to PR before the action
 

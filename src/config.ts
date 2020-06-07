@@ -32,3 +32,10 @@ export const getConfig = (): Config | null => {
 
   return null
 }
+
+export const validateConfig = (config: Config): boolean => {
+  //TODO
+  // add validation of config
+  // for example, listed reviewers are less than numOfReviewers ...
+  return true
+}
