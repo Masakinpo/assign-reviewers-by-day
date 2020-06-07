@@ -1,8 +1,12 @@
 {
   "name": "assign-reviwers-by-day",
   "version": "1.0.0",
+  "description": "Add reviewers to pull requests for each of the week",
   "main": "index.js",
-  "repository": "https://github.com/masakinpo/Assign-Reviewers-By-Day.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/masakinpo/assign-reviewers-by-day.git"
+  },
   "author": "masakinpo <masakinpo.jp@gmail.com>",
   "license": "MIT",
   "scripts": {
