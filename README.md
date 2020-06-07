@@ -1,1 +1,1 @@
-# Assign-Reviewers-By-Day
+# assign-reviewers-by-day
