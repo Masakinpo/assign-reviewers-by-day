@@ -1,0 +1,19 @@
+name: 'assign reviewers by day'
+description: 'Add reviewers to pull requests for each day of the week'
+author: 'masakinpo'
+
+inputs:
+  repo-token:
+    description: 'A token for the repo'
+    required: true
+  configuration-path:
+    description: 'A path for the auto-assign configuration'
+    default: '.github/assign_reviewers.yml'
+
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'user-check'
+  color: 'green'
