@@ -11,7 +11,7 @@ const listOfValidDay = [
 
 const kindType = "must" as const;
 
-type ReviewerType = {
+export type ReviewerType = {
   name: string
   kind?: typeof kindType
   day: (typeof listOfValidDay)[number];
