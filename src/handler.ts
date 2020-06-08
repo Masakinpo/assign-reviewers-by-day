@@ -1,5 +1,4 @@
 import { Octokit } from "@octokit/rest";
-import { setFailed } from '@actions/core'
 import { addDays, format, isWeekend } from 'date-fns';
 import _ from 'lodash';
 import { Config, ReviewerType } from "./config";
@@ -15,23 +14,17 @@ const getAvailableReviewers = (reviewers: ReviewerType[], date: Date) => {
   );
 }
 
-const async setReviewers(reviewers: string[]): Promise<object> {
-
+const setReviewers = async (octokit: Octokit, reviewers: string[]): Promise<object> => {
   const [owner, repo] = (process.env.GITHUB_REPOSITORY || '').split('/')
   const pr = Number((process.env.GITHUB_REF || '').split('refs/pull/')[1].split('/')[0])
 
-  return Octokit.pulls.createReviewRequest({
-    owner: owner,
-    repo: repo,
+  return octokit.pulls.createReviewRequest({
+    owner,
+    repo,
+    reviewers,
     pull_number: pr, // eslint-disable-line @typescript-eslint/camelcase
-    reviewers
   })
 };
-
-
-
-
-
 
 export const assignReviewers = async (octokit: Octokit, config: Config): Promise<void> => {
   const today =  new Date();
@@ -58,10 +51,8 @@ export const assignReviewers = async (octokit: Octokit, config: Config): Promise
     ));
     count++;
   }
+  let selectedOtherReviewers =
+    _.sampleSize(availableOtherReviewers, config.numOfReviewers.other)
 
-
-
-  // assign to the selected reviewers using octokit
-  // selectedMustReviewers.forEach(r =>
-  // )
+  await setReviewers(octokit, [...selectedMustReviewers, ...selectedOtherReviewers].map(r => r.name))
 }
