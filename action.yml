@@ -6,9 +6,9 @@ inputs:
   repo-token:
     description: 'A token for the repo'
     required: true
-  configuration-path:
-    description: 'A path for the auto-assign configuration'
-    default: '.github/assign_reviewers.yml'
+  config:
+    description: 'A path for the configuration'
+    default: '.github/assign-reviewers-by-day.yml'
 
 runs:
   using: 'node12'
