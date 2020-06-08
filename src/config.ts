@@ -2,13 +2,19 @@ import { getInput, setFailed } from "@actions/core";
 import { safeLoad } from 'js-yaml'
 import { readFileSync } from 'fs'
 
+const listOfValidDay = [
+  "mon", "tue", "wed", "thu", "fri", "sat", "sun",
+  "weekday",
+  "weekend",
+  "everyday"
+] as const;
+
+const kindType = "must" as const;
+
 type ReviewerType = {
   name: string
-  kind?: "must"
-  day: "mon"| "tue" | "wed" | "thu" | "fri"| "sat" | "sun"
-    | "weekday"
-    | "weekend"
-    | "everyday"
+  kind?: typeof kindType
+  day: (typeof listOfValidDay)[number];
 }
 
 type NumOfReviewersType = {
@@ -34,23 +40,20 @@ export const getConfig = (): Config | null => {
 }
 
 export const validateConfig = (config: Config): boolean => {
-  //TODO
-  // add validation of config
-  // for example, listed reviewers are less than numOfReviewers ...
-  const needs_must: number = config.numOfReviewers.must;
-  const needs_other: number = config.numOfReviewers.other;
-  const must_reviewers: number = Object.keys(config.reviewers.filter(e => e.kind == 'must')).length;
-  const other_reviewers: number = Object.keys(config.reviewers.filter(e => e.kind == null)).length;
+  // validate day
+  if (config.reviewers.some(r => !!r.day && !listOfValidDay.includes(r.day))) {
+    return false;
+  }
 
-  //condition1
-  if (needs_must + needs_other < 1)
-    return false;
-  //condition2
-  if (must_reviewers < needs_must)
-    return false;
-  //condition3
-  if (other_reviewers < needs_other)
-    return false;
+  // validate number of reviewers
+  const { must: expectedNumMustReviewer, other: expectedNumOtherReviewer} = config.numOfReviewers;
+  const numMustReviewers = config.reviewers.filter(e => e.kind === "must").length;
+  const numOtherReviewers = config.reviewers.length - numMustReviewers;
 
+  if (config.reviewers.length < 1 ||
+    numMustReviewers < expectedNumMustReviewer ||
+    numOtherReviewers < expectedNumOtherReviewer
+  )
+    return false;
   return true
 }
