@@ -10,7 +10,8 @@
   "author": "masakinpo <masakinpo.jp@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "build": "npm run build"
+    "build": "npm run build",
+    "format": "prettier --write **/*.ts",
   },
   "dependencies": {
     "@actions/core": "^1.1.1",
