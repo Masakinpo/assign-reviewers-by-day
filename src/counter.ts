@@ -1,5 +1,6 @@
 export default class Counter {
-  constructor(count) {
+  private count: number;
+  constructor(count: number) {
     this.count = count
   }
 

@@ -1,7 +1,7 @@
-import * from '../src/counter'
+import Counter from "../src/counter";
 
 describe('Counter', () => {
-  let counter
+  let counter: any;
   beforeEach(() => {
     counter = new Counter(1)
   })
