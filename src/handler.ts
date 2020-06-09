@@ -1,5 +1,6 @@
 import { Octokit } from '@octokit/rest';
-import { addDays, format, isWeekend } from 'date-fns';
+import { debug } from '@actions/core';
+import { addDays, format } from 'date-fns';
 import _ from 'lodash';
 import { Config, dayOfWeek, ReviewerType } from './config';
 
@@ -44,18 +45,19 @@ const generateDictFromConfig = (reviewers: ReviewerType[]): ReviewerDict => {
 const setReviewers = async (
   octokit: Octokit,
   reviewers: string[]
-): Promise<object> => {
+): Promise<void> => {
   const [owner, repo] = (process.env.GITHUB_REPOSITORY || '').split('/');
   const pr = Number(
     (process.env.GITHUB_REF || '').split('refs/pull/')[1].split('/')[0]
   );
 
-  return octokit.pulls.createReviewRequest({
+  const result = await octokit.pulls.createReviewRequest({
     owner,
     repo,
     reviewers,
-    pull_number: pr, // eslint-disable-line @typescript-eslint/camelcase
+    pull_number: pr,
   });
+  debug(JSON.stringify(result));
 };
 
 export const assignReviewers = async (

@@ -7,8 +7,8 @@
 	"extends": [
 		"google",
 		"plugin:@typescript-eslint/recommended",
-		"plugin:prettier/recommended", //追記
-		"prettier/@typescript-eslint" //追記
+		"plugin:prettier/recommended",
+		"prettier/@typescript-eslint"
 	],
 	"parser": "@typescript-eslint/parser",
 	"parserOptions": {

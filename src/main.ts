@@ -3,7 +3,7 @@ import { Octokit } from '@octokit/rest';
 import { getConfig, validateConfig } from './config';
 import { assignReviewers } from './handler';
 
-export const run = async () => {
+export const run = async (): Promise<void> => {
   try {
     const token = getInput('repo-token', { required: true });
     const config = getConfig();
