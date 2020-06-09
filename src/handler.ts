@@ -2,11 +2,7 @@ import { Octokit } from '@octokit/rest';
 import { debug } from '@actions/core';
 import { addDays, format } from 'date-fns';
 import _ from 'lodash';
-import { Config, dayOfWeek, ReviewerType } from './config';
-
-const mustReviewerCond = (r: ReviewerType): boolean => r.kind === 'must';
-const otherReviewerCond = (r: ReviewerType): boolean =>
-  !r.kind || r.kind !== 'must';
+import {Config, dayOfWeek, NumOfReviewersType, ReviewerType} from './config';
 
 type ReviewerDict = {
   must: {
@@ -16,6 +12,10 @@ type ReviewerDict = {
     [key in typeof dayOfWeek[number]]: ReviewerType[];
   };
 };
+
+const mustReviewerCond = (r: ReviewerType): boolean => r.kind === 'must';
+const otherReviewerCond = (r: ReviewerType): boolean =>
+  !r.kind || r.kind !== 'must';
 
 const generateDictFromConfig = (reviewers: ReviewerType[]): ReviewerDict => {
   const reviewerDict = {};
@@ -42,6 +42,65 @@ const generateDictFromConfig = (reviewers: ReviewerType[]): ReviewerDict => {
   return reviewerDict as ReviewerDict;
 };
 
+const selectReviewers = (numOfReviewers: NumOfReviewersType, reviewers: ReviewerType[]): string[] => {
+  const today = new Date();
+  const reviewerDict = generateDictFromConfig(reviewers);
+
+  // select must reviewers
+  const selectedMustReviewers: ReviewerType[] =
+    reviewerDict.must[
+      format(today, 'iii').toLowerCase() as typeof dayOfWeek[number]
+      ];
+  let count = 1;
+  while (selectedMustReviewers.length < numOfReviewers.must) {
+    const nextDayMustReviewers =
+      reviewerDict.must[
+        format(
+          addDays(today, count),
+          'iii'
+        ).toLowerCase() as typeof dayOfWeek[number]
+        ];
+    selectedMustReviewers.length + nextDayMustReviewers.length <
+    numOfReviewers.must
+      ? selectedMustReviewers.concat(nextDayMustReviewers)
+      : selectedMustReviewers.concat(
+      _.sampleSize(
+        nextDayMustReviewers,
+        numOfReviewers.must - selectedMustReviewers.length
+      )
+      );
+    count++;
+  }
+
+  // select other reviewers
+  const selectedOtherReviewers: ReviewerType[] =
+    reviewerDict.other[
+      format(today, 'iii').toLowerCase() as typeof dayOfWeek[number]
+      ];
+  count = 1;
+  while (selectedOtherReviewers.length < numOfReviewers.other) {
+    const nextDayOtherReviewers =
+      reviewerDict.other[
+        format(
+          addDays(today, count),
+          'iii'
+        ).toLowerCase() as typeof dayOfWeek[number]
+        ];
+    selectedOtherReviewers.length + nextDayOtherReviewers.length <
+    numOfReviewers.other
+      ? selectedOtherReviewers.concat(nextDayOtherReviewers)
+      : selectedOtherReviewers.concat(
+      _.sampleSize(
+        nextDayOtherReviewers,
+        numOfReviewers.other - selectedOtherReviewers.length
+      )
+      );
+    count++;
+  }
+
+  return [...selectedMustReviewers, ...selectedOtherReviewers].map((r) => r.name);
+}
+
 const setReviewers = async (
   octokit: Octokit,
   reviewers: string[]
@@ -64,63 +123,10 @@ export const assignReviewers = async (
   octokit: Octokit,
   config: Config
 ): Promise<void> => {
-  const today = new Date();
-  const reviewerDict = generateDictFromConfig(config.reviewers);
-
-  // select must reviewers
-  const selectedMustReviewers: ReviewerType[] =
-    reviewerDict.must[
-      format(today, 'iii').toLowerCase() as typeof dayOfWeek[number]
-    ];
-  let count = 1;
-  while (selectedMustReviewers.length < config.numOfReviewers.must) {
-    const nextDayMustReviewers =
-      reviewerDict.must[
-        format(
-          addDays(today, count),
-          'iii'
-        ).toLowerCase() as typeof dayOfWeek[number]
-      ];
-    selectedMustReviewers.length + nextDayMustReviewers.length <
-    config.numOfReviewers.must
-      ? selectedMustReviewers.concat(nextDayMustReviewers)
-      : selectedMustReviewers.concat(
-          _.sampleSize(
-            nextDayMustReviewers,
-            config.numOfReviewers.must - selectedMustReviewers.length
-          )
-        );
-    count++;
-  }
-
-  // select other reviewers
-  const selectedOtherReviewers: ReviewerType[] =
-    reviewerDict.other[
-      format(today, 'iii').toLowerCase() as typeof dayOfWeek[number]
-    ];
-  count = 1;
-  while (selectedOtherReviewers.length < config.numOfReviewers.other) {
-    const nextDayOtherReviewers =
-      reviewerDict.other[
-        format(
-          addDays(today, count),
-          'iii'
-        ).toLowerCase() as typeof dayOfWeek[number]
-      ];
-    selectedOtherReviewers.length + nextDayOtherReviewers.length <
-    config.numOfReviewers.other
-      ? selectedOtherReviewers.concat(nextDayOtherReviewers)
-      : selectedOtherReviewers.concat(
-          _.sampleSize(
-            nextDayOtherReviewers,
-            config.numOfReviewers.other - selectedOtherReviewers.length
-          )
-        );
-    count++;
-  }
-
+  const {numOfReviewers, reviewers} = config;
+  const nameOfSelectedReviewers = selectReviewers(numOfReviewers, reviewers);
   await setReviewers(
     octokit,
-    [...selectedMustReviewers, ...selectedOtherReviewers].map((r) => r.name)
+    nameOfSelectedReviewers
   );
 };
