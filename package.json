@@ -10,7 +10,9 @@
   "author": "masakinpo <masakinpo.jp@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "build": "npm run build"
+    "build": "npm run build",
+    "format": "prettier --write **/*.ts",
+    "lint": "eslint src/**/*.ts"
   },
   "dependencies": {
     "@actions/core": "^1.1.1",
@@ -26,11 +28,24 @@
     "@types/node": "^12.7.8",
     "@typescript-eslint/eslint-plugin": "^3.2.0",
     "@typescript-eslint/parser": "^3.2.0",
+    "husky": "^3.0.8",
     "eslint": "^7.2.0",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.3",
     "prettier": "^2.0.5",
+    "lint-staged": "10.2.9",
     "typescript": "^3.6.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/!(*.d).{ts}": [
+      "prettier --write",
+      "eslint"
+    ]
   }
 }
