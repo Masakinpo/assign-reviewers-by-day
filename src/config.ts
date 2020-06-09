@@ -26,7 +26,7 @@ export type ReviewerType = {
   day: typeof listOfValidDay[number];
 };
 
-type NumOfReviewersType = {
+export type NumOfReviewersType = {
   must: number;
   other: number;
 };
