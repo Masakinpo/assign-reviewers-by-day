@@ -2,8 +2,9 @@ import { getInput, setFailed } from "@actions/core";
 import { safeLoad } from 'js-yaml'
 import { readFileSync } from 'fs'
 
+export const dayOfWeek = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const
 const listOfValidDay = [
-  "mon", "tue", "wed", "thu", "fri", "sat", "sun",
+  ...dayOfWeek,
   "weekday",
   "weekend",
   "everyday"
