@@ -48,9 +48,9 @@ const selectReviewers = (numOfReviewers: NumOfReviewersType, reviewers: Reviewer
 
   // select must reviewers
   const selectedMustReviewers: ReviewerType[] =
-    reviewerDict.must[
+    _.sampleSize(reviewerDict.must[
       format(today, 'iii').toLowerCase() as typeof dayOfWeek[number]
-      ];
+      ], numOfReviewers.must);
   let count = 1;
   while (selectedMustReviewers.length < numOfReviewers.must) {
     const nextDayMustReviewers =
@@ -74,9 +74,10 @@ const selectReviewers = (numOfReviewers: NumOfReviewersType, reviewers: Reviewer
 
   // select other reviewers
   const selectedOtherReviewers: ReviewerType[] =
+    _.sampleSize(
     reviewerDict.other[
       format(today, 'iii').toLowerCase() as typeof dayOfWeek[number]
-      ];
+      ], numOfReviewers.other);
   count = 1;
   while (selectedOtherReviewers.length < numOfReviewers.other) {
     const nextDayOtherReviewers =
