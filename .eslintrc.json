@@ -1,0 +1,22 @@
+{
+	"env": {
+		"browser": true,
+		"es2020": true,
+		"node": true
+	},
+	"extends": [
+		"google",
+		"plugin:@typescript-eslint/recommended",
+		"plugin:prettier/recommended", //追記
+		"prettier/@typescript-eslint" //追記
+	],
+	"parser": "@typescript-eslint/parser",
+	"parserOptions": {
+		"ecmaVersion": 11,
+		"sourceType": "module"
+	},
+	"plugins": [
+		"@typescript-eslint"
+	],
+	"rules": {}
+}
