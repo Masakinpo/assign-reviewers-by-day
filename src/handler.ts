@@ -24,8 +24,8 @@ export const generateDictFromConfig = (
   dayOfWeek.forEach((d) => {
     const availableReviewers = reviewers.filter(
       (r) =>
-        r.day.includes(d) ||
         !r.day ||
+        r.day.includes(d) ||
         r.day.includes('everyday') ||
         ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
         (d !== 'sat' && d !== 'sun' && r.day.includes('weekday'))
@@ -48,63 +48,62 @@ export const selectReviewers = (
   numOfReviewers: NumOfReviewersType,
   reviewers: ReviewerType[]
 ): string[] => {
-  const today = new Date();
+  let today = new Date();
   const reviewerDict = generateDictFromConfig(reviewers);
 
   // select must reviewers
-  const selectedMustReviewers: ReviewerType[] = _.sampleSize(
+  let selectedMustReviewers: ReviewerType[] = _.sampleSize(
     reviewerDict.must[
       format(today, 'iii').toLowerCase() as typeof dayOfWeek[number]
     ],
     numOfReviewers.must
   );
-  let count = 1;
   while (selectedMustReviewers.length < numOfReviewers.must) {
     const nextDayMustReviewers =
       reviewerDict.must[
         format(
-          addDays(today, count),
+          addDays(today, 1),
           'iii'
         ).toLowerCase() as typeof dayOfWeek[number]
       ];
-    selectedMustReviewers.length + nextDayMustReviewers.length <
-    numOfReviewers.must
-      ? selectedMustReviewers.concat(nextDayMustReviewers)
-      : selectedMustReviewers.concat(
-          _.sampleSize(
-            nextDayMustReviewers,
-            numOfReviewers.must - selectedMustReviewers.length
-          )
-        );
-    count++;
+    selectedMustReviewers =
+      selectedMustReviewers.length + nextDayMustReviewers.length <
+      numOfReviewers.must
+        ? selectedMustReviewers.concat(nextDayMustReviewers)
+        : selectedMustReviewers.concat(
+            _.sampleSize(
+              nextDayMustReviewers,
+              numOfReviewers.must - selectedMustReviewers.length
+            )
+          );
   }
 
   // select other reviewers
-  const selectedOtherReviewers: ReviewerType[] = _.sampleSize(
+  let selectedOtherReviewers: ReviewerType[] = _.sampleSize(
     reviewerDict.other[
       format(today, 'iii').toLowerCase() as typeof dayOfWeek[number]
     ],
     numOfReviewers.other
   );
-  count = 1;
+  today = new Date();
   while (selectedOtherReviewers.length < numOfReviewers.other) {
     const nextDayOtherReviewers =
       reviewerDict.other[
         format(
-          addDays(today, count),
+          addDays(today, 1),
           'iii'
         ).toLowerCase() as typeof dayOfWeek[number]
       ];
-    selectedOtherReviewers.length + nextDayOtherReviewers.length <
-    numOfReviewers.other
-      ? selectedOtherReviewers.concat(nextDayOtherReviewers)
-      : selectedOtherReviewers.concat(
-          _.sampleSize(
-            nextDayOtherReviewers,
-            numOfReviewers.other - selectedOtherReviewers.length
-          )
-        );
-    count++;
+    selectedOtherReviewers =
+      selectedOtherReviewers.length + nextDayOtherReviewers.length <
+      numOfReviewers.other
+        ? selectedOtherReviewers.concat(nextDayOtherReviewers)
+        : selectedOtherReviewers.concat(
+            _.sampleSize(
+              nextDayOtherReviewers,
+              numOfReviewers.other - selectedOtherReviewers.length
+            )
+          );
   }
 
   return [...selectedMustReviewers, ...selectedOtherReviewers].map(

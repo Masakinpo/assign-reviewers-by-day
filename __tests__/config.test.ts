@@ -11,12 +11,12 @@ describe('validate config test', () => {
             day: ['everyday'],
           },
           {
-            name: 'cr7',
+            name: 'iniesta',
             day: ['mon', 'tue', 'wed'],
           },
           {
             name: 'cr7',
-            day: ['mon', 'tue', 'wed'],
+            day: ['weekday'],
           },
           {
             name: 'zlatan',
