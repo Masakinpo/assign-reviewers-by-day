@@ -39,4 +39,12 @@ describe('validate config test', () => {
       numOfReviewers: { must: 0, other: 0 },
     })).toBe(false);
   })
+
+  test('invalid config: invalid day', () => {
+    expect(validateConfig({
+      // @ts-ignore
+      reviewers: [{ name: 'iniesta', day: ['freitag']}],
+      numOfReviewers: { must: 0, other: 1 },
+    })).toBe(false);
+  })
 })
