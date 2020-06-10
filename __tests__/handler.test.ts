@@ -63,7 +63,7 @@ describe('selectReviewers test1', () => {
     );
   });
 
-  afterAll(() => {
+  afterEach(() => {
     spiedDate.mockRestore();
   });
 
@@ -123,7 +123,7 @@ describe('selectReviewers test2', () => {
     );
   });
 
-  afterAll(() => {
+  afterEach(() => {
     spiedDate.mockRestore();
   });
 
