@@ -23,7 +23,7 @@ const kindType = 'must' as const;
 export type ReviewerType = {
   name: string;
   kind?: typeof kindType;
-  day: typeof listOfValidDay;
+  day?: Partial<typeof listOfValidDay>;
 };
 
 export type NumOfReviewersType = {
@@ -61,7 +61,8 @@ export const validateConfig = (config: Config): boolean => {
   if (
     config.reviewers.length < 1 ||
     numMustReviewers < expectedNumMustReviewer ||
-    numOtherReviewers < expectedNumOtherReviewer
+    numOtherReviewers < expectedNumOtherReviewer ||
+    expectedNumMustReviewer + expectedNumOtherReviewer < 1
   ) {
     error("Invalid number of reviewers")
     return false;
@@ -69,7 +70,7 @@ export const validateConfig = (config: Config): boolean => {
 
   // validate day
   if (config.reviewers.some(
-    (r) => !!r.day && r.day.some(d => !listOfValidDay.includes(d)))) {
+    (r) => !!r.day && r.day.some(d => !listOfValidDay.includes(d!)))) {
     error("Invalid day is included")
     return false;
   }
