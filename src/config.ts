@@ -11,6 +11,7 @@ export const dayOfWeek = [
   'sat',
   'sun',
 ] as const;
+
 const listOfValidDay = [
   ...dayOfWeek,
   'weekday',
@@ -23,7 +24,7 @@ const kindType = 'must' as const;
 export type ReviewerType = {
   name: string;
   kind?: typeof kindType;
-  day?: Partial<typeof listOfValidDay>;
+  day?: Array<Partial<typeof listOfValidDay[number]>>;
 };
 
 export type NumOfReviewersType = {

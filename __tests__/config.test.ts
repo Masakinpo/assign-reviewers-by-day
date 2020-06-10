@@ -1,50 +1,80 @@
 import { validateConfig } from './../src/config';
 
-//TODO
-// add test for validateConfig
-
 describe('validate config test', () => {
-  //TODO test名よさげに変えたほうがいいかも
-  test('valid config: hoge', () => {
-    expect(validateConfig({
-      reviewers: [{ name: 'messi', kind: 'must', day: ['mon']}],
-      numOfReviewers: { must: 1, other: 0 },
-    })).toBe(true);
+  test('valid config', () => {
+    expect(
+      validateConfig({
+        reviewers: [
+          {
+            name: 'messi',
+            kind: 'must',
+            day: ['everyday']
+          },
+          {
+            name: 'cr7',
+            day: ['mon', 'tue', 'wed']
+          },
+          {
+            name: 'cr7',
+            day: ['mon', 'tue', 'wed']
+          },
+          {
+            name: 'zlatan',
+            day: ['fri']
+          },
+          {
+            name: 'aubameyang',
+            day: ['weekend']
+          }
+        ],
+        numOfReviewers: { must: 1, other: 2 },
+      })).toBe(true);
   })
 
-  test('valid config: hogehoge', () => {
+  test('invalid config: invalid must numOfReviewers', () => {
     expect(validateConfig({
-      reviewers: [{ name: 'cr7', kind: 'must', day: ['mon', 'tue', 'wed']}],
-      numOfReviewers: { must: 1, other: 0 },
-    })).toBe(true);
-  })
-
-  test('invalid config: hogehogehoge', () => {
-    expect(validateConfig({
-      reviewers: [{ name: 'zlatan', day: ['mon', 'tue', 'wed']}],
-      numOfReviewers: { must: 1, other: 0 },
+      reviewers: [
+        {
+          name: 'messi',
+          kind: 'must',
+          day: ['everyday']
+        }
+      ],
+      numOfReviewers: { must: 2, other: 0 },
     })).toBe(false);
   })
 
-  test('valid config: just name', () => {
+  test('invalid config: invalid other numOfReviewers', () => {
     expect(validateConfig({
-      reviewers: [{ name: 'zlatan'}],
-      numOfReviewers: { must: 0, other: 1 },
-    })).toBe(true);
+      reviewers: [
+        {
+          name: 'messi',
+          day: ['everyday']
+        }
+      ],
+      numOfReviewers: { must: 0, other: 2 },
+    })).toBe(false);
   })
 
   test('invalid config: 0 numOfReviewers in total', () => {
     expect(validateConfig({
-      reviewers: [{ name: 'aubameyang'}],
+      reviewers: [],
       numOfReviewers: { must: 0, other: 0 },
     })).toBe(false);
   })
 
   test('invalid config: invalid day', () => {
     expect(validateConfig({
-      // @ts-ignore
-      reviewers: [{ name: 'iniesta', day: ['freitag']}],
-      numOfReviewers: { must: 0, other: 1 },
-    })).toBe(false);
+        reviewers: [
+          {
+            name: 'messi',
+            kind: 'must',
+            // @ts-ignore
+            day: ['freitag']
+          }
+        ],
+        numOfReviewers: { must: 1, other: 0 },
+      }
+    )).toBe(false);
   })
 })
