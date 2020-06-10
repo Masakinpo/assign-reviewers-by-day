@@ -1,4 +1,4 @@
-import { getInput, setFailed } from '@actions/core';
+import { getInput, setFailed, error } from '@actions/core';
 import { safeLoad } from 'js-yaml';
 import { readFileSync } from 'fs';
 
@@ -62,9 +62,16 @@ export const validateConfig = (config: Config): boolean => {
     config.reviewers.length < 1 ||
     numMustReviewers < expectedNumMustReviewer ||
     numOtherReviewers < expectedNumOtherReviewer
-  )
+  ) {
+    error("Invalid number of reviewers")
     return false;
+  }
+
   // validate day
-  return !config.reviewers.some(
-    (r) => !!r.day && r.day.some(d => !listOfValidDay.includes(d)))
+  if (config.reviewers.some(
+    (r) => !!r.day && r.day.some(d => !listOfValidDay.includes(d)))) {
+    error("Invalid day is included")
+    return false;
+  }
+  return true
 };
