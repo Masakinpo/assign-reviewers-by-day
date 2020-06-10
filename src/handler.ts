@@ -22,11 +22,11 @@ const generateDictFromConfig = (reviewers: ReviewerType[]): ReviewerDict => {
   dayOfWeek.forEach((d) => {
     const availableReviewers = reviewers.filter(
       (r) =>
-        r.day === d ||
+        r.day.includes(d) ||
         !r.day ||
-        r.day === 'everyday' ||
-        ((d === 'sat' || d === 'sun') && r.day === 'weekend') ||
-        (d !== 'sat' && d !== 'sun' && r.day === 'weekday')
+        r.day.includes('everyday') ||
+        ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
+        (d !== 'sat' && d !== 'sun' && r.day.includes('weekday'))
     );
     _.set<ReviewerDict>(
       reviewerDict,

@@ -1,4 +1,4 @@
-import { getInput, setFailed } from '@actions/core';
+import { getInput, setFailed, error } from '@actions/core';
 import { safeLoad } from 'js-yaml';
 import { readFileSync } from 'fs';
 
@@ -11,6 +11,7 @@ export const dayOfWeek = [
   'sat',
   'sun',
 ] as const;
+
 const listOfValidDay = [
   ...dayOfWeek,
   'weekday',
@@ -23,7 +24,7 @@ const kindType = 'must' as const;
 export type ReviewerType = {
   name: string;
   kind?: typeof kindType;
-  day: typeof listOfValidDay[number];
+  day?: Array<Partial<typeof listOfValidDay[number]>>;
 };
 
 export type NumOfReviewersType = {
@@ -49,13 +50,6 @@ export const getConfig = (): Config | null => {
 };
 
 export const validateConfig = (config: Config): boolean => {
-  // validate day
-  if (
-    config.reviewers.some((r) => !!r.day && !listOfValidDay.includes(r.day))
-  ) {
-    return false;
-  }
-
   // validate number of reviewers
   const {
     must: expectedNumMustReviewer,
@@ -68,8 +62,18 @@ export const validateConfig = (config: Config): boolean => {
   if (
     config.reviewers.length < 1 ||
     numMustReviewers < expectedNumMustReviewer ||
-    numOtherReviewers < expectedNumOtherReviewer
-  )
+    numOtherReviewers < expectedNumOtherReviewer ||
+    expectedNumMustReviewer + expectedNumOtherReviewer < 1
+  ) {
+    error("Invalid number of reviewers")
     return false;
-  return true;
+  }
+
+  // validate day
+  if (config.reviewers.some(
+    (r) => !!r.day && r.day.some(d => !listOfValidDay.includes(d!)))) {
+    error("Invalid day is included")
+    return false;
+  }
+  return true
 };
