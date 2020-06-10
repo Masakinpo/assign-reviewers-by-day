@@ -92,6 +92,55 @@ describe('selectReviewers test2', () => {
   const reviewers: ReviewerType[] = [
     {
       name: 'messi',
+    },
+    {
+      name: 'iniesta',
+    },
+    {
+      name: 'cr7',
+    },
+  ];
+  const OriginalDate = Date;
+  let now: Date;
+  let spiedDate: jest.SpyInstance;
+
+  beforeEach(() => {
+    now = new OriginalDate('2020/6/8 12:00:00'); // Monday
+    spiedDate = jest.spyOn(global, 'Date').mockImplementation(
+      // @ts-ignore
+      () => now
+    );
+  });
+
+  afterEach(() => {
+    spiedDate.mockRestore();
+  });
+
+  const testTable = [
+    [0, 'mon', ['messi', 'cr7'], ['messi', 'iniesta'], ['iniesta', 'cr7']],
+    [1, 'tue', ['messi', 'cr7'], ['messi', 'iniesta'], ['iniesta', 'cr7']],
+    [2, 'wed', ['messi', 'cr7'], ['messi', 'iniesta'], ['iniesta', 'cr7']],
+    [3, 'thu', ['messi', 'cr7'], ['messi', 'iniesta'], ['iniesta', 'cr7']],
+    [4, 'fri', ['messi', 'cr7'], ['messi', 'iniesta'], ['iniesta', 'cr7']],
+    [5, 'sat', ['messi', 'cr7'], ['messi', 'iniesta'], ['iniesta', 'cr7']],
+    [6, 'sun', ['messi', 'cr7'], ['messi', 'iniesta'], ['iniesta', 'cr7']],
+  ];
+
+  test.each(testTable)('%i: %s', (num, dayOfWeek, ...expected) => {
+    now.setDate(now.getDate() + (num as number));
+    const selectedReviewers = selectReviewers(numOfReviewers, reviewers).sort();
+    console.info(selectedReviewers);
+    expect(
+      expected.some((e) => _.isEqual((e as string[]).sort(), selectedReviewers))
+    ).toBe(true);
+  });
+});
+
+describe('selectReviewers test3', () => {
+  const numOfReviewers = { must: 0, other: 2 };
+  const reviewers: ReviewerType[] = [
+    {
+      name: 'messi',
       day: ['weekday'],
     },
     {
