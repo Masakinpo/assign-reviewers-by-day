@@ -65,15 +65,18 @@ export const validateConfig = (config: Config): boolean => {
     numOtherReviewers < expectedNumOtherReviewer ||
     expectedNumMustReviewer + expectedNumOtherReviewer < 1
   ) {
-    error("Invalid number of reviewers")
+    error('Invalid number of reviewers');
     return false;
   }
 
   // validate day
-  if (config.reviewers.some(
-    (r) => !!r.day && r.day.some(d => !listOfValidDay.includes(d!)))) {
-    error("Invalid day is included")
+  if (
+    config.reviewers.some(
+      (r) => !!r.day && r.day.some((d) => !listOfValidDay.includes(d!))
+    )
+  ) {
+    error('Invalid day is included');
     return false;
   }
-  return true
+  return true;
 };
