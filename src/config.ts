@@ -23,7 +23,7 @@ const kindType = 'must' as const;
 export type ReviewerType = {
   name: string;
   kind?: typeof kindType;
-  day: typeof listOfValidDay[number];
+  day: typeof listOfValidDay;
 };
 
 export type NumOfReviewersType = {
@@ -49,13 +49,6 @@ export const getConfig = (): Config | null => {
 };
 
 export const validateConfig = (config: Config): boolean => {
-  // validate day
-  if (
-    config.reviewers.some((r) => !!r.day && !listOfValidDay.includes(r.day))
-  ) {
-    return false;
-  }
-
   // validate number of reviewers
   const {
     must: expectedNumMustReviewer,
@@ -71,5 +64,7 @@ export const validateConfig = (config: Config): boolean => {
     numOtherReviewers < expectedNumOtherReviewer
   )
     return false;
-  return true;
+  // validate day
+  return !config.reviewers.some(
+    (r) => !!r.day && r.day.some(d => !listOfValidDay.includes(d)))
 };
