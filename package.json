@@ -10,7 +10,7 @@
   "author": "masakinpo <masakinpo.jp@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "build": "npm run build",
+    "build": "tsc && ncc build lib/main.js",
     "format": "prettier --write **/*.ts",
     "lint": "eslint src/**/*.ts",
     "test": "jest"
