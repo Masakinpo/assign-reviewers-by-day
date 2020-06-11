@@ -212,8 +212,8 @@ describe('selectReviewers', () => {
 
   test.each(testTable)(
     '%i: %s',
-    (num, dayOfWeek, numOfReviewers, reviewers, ...expected) => {
-      now.setDate(now.getDate() + (num as number));
+    (num, testName, numOfReviewers, reviewers, ...expected) => {
+      now.setDate(now.getDate() + num);
       const selectedReviewers = selectReviewers(
         numOfReviewers,
         reviewers
