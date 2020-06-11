@@ -23,6 +23,31 @@ const reviewers: ReviewerType[] = [
   },
 ];
 
+describe('generateDictFromConfig test', () => {
+  test('valid config', () => {
+    expect(generateDictFromConfig(reviewers)).toEqual({
+      must: {
+        mon: [{ day: ['weekday'], kind: 'must', name: 'messi' }],
+        tue: [{ day: ['weekday'], kind: 'must', name: 'messi' }],
+        wed: [{ day: ['weekday'], kind: 'must', name: 'messi' }],
+        thu: [{ day: ['weekday'], kind: 'must', name: 'messi' }],
+        fri: [{ day: ['weekday'], kind: 'must', name: 'messi' }],
+        sat: [{ day: ['weekend'], kind: 'must', name: 'aubameyang' }],
+        sun: [{ day: ['weekend'], kind: 'must', name: 'aubameyang' }],
+      },
+      other: {
+        mon: [{ day: ['mon', 'wed', 'fri'], name: 'cr7' }],
+        tue: [{ day: ['tue', 'thu'], name: 'zlatan' }],
+        wed: [{ day: ['mon', 'wed', 'fri'], name: 'cr7' }],
+        thu: [{ day: ['tue', 'thu'], name: 'zlatan' }],
+        fri: [{ day: ['mon', 'wed', 'fri'], name: 'cr7' }],
+        sat: [],
+        sun: [],
+      },
+    });
+  });
+});
+
 const reviewers2: ReviewerType[] = [
   {
     name: 'messi',
@@ -57,31 +82,6 @@ const reviewers3: ReviewerType[] = [
     day: ['weekend'],
   },
 ];
-
-describe('generateDictFromConfig test', () => {
-  test('valid config', () => {
-    expect(generateDictFromConfig(reviewers)).toEqual({
-      must: {
-        mon: [{ day: ['weekday'], kind: 'must', name: 'messi' }],
-        tue: [{ day: ['weekday'], kind: 'must', name: 'messi' }],
-        wed: [{ day: ['weekday'], kind: 'must', name: 'messi' }],
-        thu: [{ day: ['weekday'], kind: 'must', name: 'messi' }],
-        fri: [{ day: ['weekday'], kind: 'must', name: 'messi' }],
-        sat: [{ day: ['weekend'], kind: 'must', name: 'aubameyang' }],
-        sun: [{ day: ['weekend'], kind: 'must', name: 'aubameyang' }],
-      },
-      other: {
-        mon: [{ day: ['mon', 'wed', 'fri'], name: 'cr7' }],
-        tue: [{ day: ['tue', 'thu'], name: 'zlatan' }],
-        wed: [{ day: ['mon', 'wed', 'fri'], name: 'cr7' }],
-        thu: [{ day: ['tue', 'thu'], name: 'zlatan' }],
-        fri: [{ day: ['mon', 'wed', 'fri'], name: 'cr7' }],
-        sat: [],
-        sun: [],
-      },
-    });
-  });
-});
 
 describe('selectReviewers', () => {
   const OriginalDate = Date;
