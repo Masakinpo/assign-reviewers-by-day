@@ -24,7 +24,7 @@ const kindType = 'must' as const;
 export type ReviewerType = {
   name: string;
   kind?: typeof kindType;
-  day?: Array<Partial<typeof listOfValidDay[number]>>;
+  day?: Array<typeof listOfValidDay[number]>;
 };
 
 export type NumOfReviewersType = {
