@@ -10,10 +10,12 @@
   "author": "masakinpo <masakinpo.jp@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc && ncc build lib/main.js",
+    "build": "tsc",
+    "pack": "ncc build lib/main.js",
     "format": "prettier --write **/*.ts",
     "lint": "eslint src/**/*.ts",
-    "test": "jest"
+    "test": "jest",
+    "all": "npm run build && npm run format && npm run lint && npm run pack && npm test"
   },
   "dependencies": {
     "@actions/core": "^1.1.1",

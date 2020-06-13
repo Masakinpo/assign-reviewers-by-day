@@ -1,24 +1,6 @@
 reviewers:
-  - name: Okajima
+  - name: masakinpo
     kind: must
-    day:
-      - mon
-      - tue
-      - wed
-  - name: Fujita
-    kind: must
-    day:
-      - thu
-      - fri
-  - name: Ginji
-    day:
-      - any
-  - name: Jones
-    day:
-      - weekend
-  - name: McGehee
-    day:
-      - weekday
 numOfReviewers:
   - must: 1
-  - other: 1
+  - other: 0
