@@ -1,4 +1,6 @@
 reviewers:
+  - name: masakinpo
+    kind: must
   - name: shintaro2844
     kind: must
 numOfReviewers:
