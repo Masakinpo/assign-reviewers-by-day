@@ -16,5 +16,4 @@ jobs:
       - uses: actions/checkout@v1
       - uses: ./
         with:
-          milliseconds: 1000
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
