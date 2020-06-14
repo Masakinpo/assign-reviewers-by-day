@@ -74,7 +74,6 @@ describe('generateDictFromConfig test', () => {
   });
 });
 
-
 describe('selectReviewers', () => {
   const OriginalDate = Date;
   let now: Date;
@@ -94,7 +93,7 @@ describe('selectReviewers', () => {
       group: 'gods',
     },
   ];
-  
+
   beforeEach(() => {
     now = new OriginalDate('2020/6/8 12:00:00'); // Monday
     spiedDate = jest.spyOn(global, 'Date').mockImplementation(
@@ -113,7 +112,7 @@ describe('selectReviewers', () => {
       'case2: mon',
       { gods: 2 },
       reviewers2,
-      ['gods', 'cr7'],
+      ['messi', 'cr7'],
       ['messi', 'zlatan'],
       ['zlatan', 'cr7'],
     ],
@@ -171,7 +170,17 @@ describe('selectReviewers', () => {
       ['messi', 'zlatan'],
       ['zlatan', 'cr7'],
     ],
-  ] as Array<[number, string, NumOfReviewersType, ReviewerType[], string[], string[], string[]]>;
+  ] as Array<
+    [
+      number,
+      string,
+      NumOfReviewersType,
+      ReviewerType[],
+      string[],
+      string[],
+      string[]
+    ]
+  >;
 
   test.each(testTable)(
     '%i: %s',
@@ -246,7 +255,7 @@ describe('skipCondition', () => {
       },
       {
         reviewers: [],
-        numOfReviewers: { must: 0, other: 1 },
+        numOfReviewers: {},
       },
       true,
     ],
@@ -260,7 +269,7 @@ describe('skipCondition', () => {
       },
       {
         reviewers: [],
-        numOfReviewers: { must: 0, other: 1 },
+        numOfReviewers: {},
       },
       true,
     ],
@@ -274,21 +283,7 @@ describe('skipCondition', () => {
       },
       {
         reviewers: [],
-        numOfReviewers: { must: 0, other: 1 },
-      },
-      true,
-    ],
-    [
-      'num of reviewers are already more than numOfReviewers  ',
-      {
-        draft: false,
-        requested_reviewers: ['messi', 'cr7'],
-        title: '',
-        user: { login: '' },
-      },
-      {
-        reviewers: [],
-        numOfReviewers: { must: 0, other: 1 },
+        numOfReviewers: {},
       },
       true,
     ],

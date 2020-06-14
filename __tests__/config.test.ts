@@ -31,15 +31,6 @@ describe('validate config test', () => {
     ).toBe(true);
   });
 
-  test('invalid config: 0 numOfReviewers in total', () => {
-    expect(
-      validateConfig({
-        reviewers: [],
-        numOfReviewers: { must: 0, other: 0 },
-      })
-    ).toBe(false);
-  });
-
   test('invalid config: numOfReviewers must be provided for all groups', () => {
     expect(
       validateConfig({
@@ -70,19 +61,18 @@ describe('validate config test', () => {
     ).toBe(false);
   });
 
-
   test('invalid config: invalid day', () => {
     expect(
       validateConfig({
         reviewers: [
           {
             name: 'messi',
-            kind: 'must',
+            group: 'gods',
             // @ts-ignore
             day: ['freitag'],
           },
         ],
-        numOfReviewers: { must: 1, other: 0 },
+        numOfReviewers: { gods: 1 },
       })
     ).toBe(false);
   });

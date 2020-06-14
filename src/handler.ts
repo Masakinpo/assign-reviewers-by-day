@@ -39,19 +39,28 @@ export const selectReviewers = (
   PR: PR
 ): string[] => {
   const reviewerDict = generateDictFromConfig(reviewers);
-  let selectedReviewers: ReviewerType[] = [];
-  Object.keys(reviewerDict).forEach((key) => {
+  let selectedReviewers: string[] = [];
+  Object.keys(reviewerDict).forEach((group) => {
+    const availableNames = reviewerDict[group][
+      format(new Date(), 'iii').toLowerCase() as typeof dayOfWeek[number]
+    ]
+      .filter((r) => r.name !== PR.user.login)
+      .map((r) => r.name);
+    const namesOfAlreadyRequestedReviewers = _.intersection(
+      PR.requested_reviewers.map((r) => r.login),
+      availableNames
+    );
     selectedReviewers = [
       ...selectedReviewers,
-      ..._.sampleSize<ReviewerType>(
-        reviewerDict[key][
-          format(new Date(), 'iii').toLowerCase() as typeof dayOfWeek[number]
-        ].filter((r) => r.name !== PR.user.login),
-        numOfReviewers[key]
+      ..._.sampleSize<string>(
+        availableNames.filter(
+          (r) => !namesOfAlreadyRequestedReviewers.includes(r)
+        ),
+        numOfReviewers[group] - namesOfAlreadyRequestedReviewers.length
       ),
     ];
   });
-  return selectedReviewers.map((r) => r.name);
+  return selectedReviewers;
 };
 
 const setReviewers = async (
@@ -99,7 +108,7 @@ const getPR = async (
   return data;
 };
 
-export const skipCondition = (PR: PR | null, config: Config) => {
+export const skipCondition = (PR: PR | null, config: Config): boolean => {
   if (!PR) {
     return true;
   }
@@ -109,13 +118,6 @@ export const skipCondition = (PR: PR | null, config: Config) => {
   }
   // if PR's title contains WIP/wip, skip
   if (PR.title.includes('WIP') || PR.title.includes('wip')) {
-    return true;
-  }
-  // if num of requested reviewers are already more than config.numOfReviewers.must + config.numOfReviewers.other, skip
-  if (
-    PR.requested_reviewers.length >=
-    config.numOfReviewers.must + config.numOfReviewers.other
-  ) {
     return true;
   }
   return false;

@@ -14017,7 +14017,6 @@ const listOfValidDay = [
     'weekend',
     'everyday',
 ];
-const kindType = 'must';
 exports.getConfig = () => {
     const configPath = core_1.getInput('config', { required: true });
     try {
@@ -14029,33 +14028,14 @@ exports.getConfig = () => {
     return null;
 };
 exports.validateConfig = (config) => {
-    // validate number of reviewers
-    const { must: expectedNumMustReviewer, other: expectedNumOtherReviewer, } = config.numOfReviewers;
-    const numMustReviewers = config.reviewers.filter((e) => e.kind === 'must')
-        .length;
-    const numOtherReviewers = config.reviewers.length - numMustReviewers;
-    if (config.reviewers.length < 1 ||
-        numMustReviewers < expectedNumMustReviewer ||
-        numOtherReviewers < expectedNumOtherReviewer ||
-        expectedNumMustReviewer + expectedNumOtherReviewer < 1) {
-        core_1.error('Invalid number of reviewers');
-        return false;
-    }
     // validate day
     if (config.reviewers.some((r) => !!r.day && r.day.some((d) => !listOfValidDay.includes(d)))) {
         core_1.error('Invalid day is included');
         return false;
     }
-    // numOfReviewers must be provided
-    if (!config.numOfReviewers ||
-        !config.numOfReviewers.must ||
-        !config.numOfReviewers.other) {
-        core_1.error('Invalid numOfReviewers');
-        return false;
-    }
-    // validate duplicated name
-    if (lodash_1.default.uniqBy(config.reviewers, 'name').length !== config.reviewers.length) {
-        core_1.error('Duplicated name');
+    const groups = lodash_1.default.uniq(config.reviewers.map((r) => r.group));
+    if (groups.some((g) => !config.numOfReviewers[g])) {
+        core_1.error('numOfGroup must be provided for all groups');
         return false;
     }
     return true;
@@ -46388,28 +46368,37 @@ const core_1 = __webpack_require__(470);
 const date_fns_1 = __webpack_require__(684);
 const lodash_1 = __importDefault(__webpack_require__(557));
 const config_1 = __webpack_require__(478);
-const mustReviewerCond = (r) => r.kind === 'must';
-const otherReviewerCond = (r) => !r.kind || r.kind !== 'must';
 exports.generateDictFromConfig = (reviewers) => {
+    const groups = lodash_1.default.uniq(reviewers.map((r) => r.group));
     const reviewerDict = {};
-    config_1.dayOfWeek.forEach((d) => {
-        const availableReviewers = reviewers.filter((r) => !r.day ||
-            r.day.includes(d) ||
-            r.day.includes('everyday') ||
-            ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
-            (d !== 'sat' && d !== 'sun' && r.day.includes('weekday')));
-        lodash_1.default.set(reviewerDict, ['must', d], availableReviewers.filter((r) => mustReviewerCond(r)));
-        lodash_1.default.set(reviewerDict, ['other', d], availableReviewers.filter((r) => otherReviewerCond(r)));
+    groups.forEach((g) => {
+        config_1.dayOfWeek.forEach((d) => {
+            const availableReviewers = reviewers
+                .filter((r) => r.group === g)
+                .filter((r) => !r.day ||
+                r.day.includes(d) ||
+                r.day.includes('everyday') ||
+                ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
+                (d !== 'sat' && d !== 'sun' && r.day.includes('weekday')));
+            lodash_1.default.set(reviewerDict, [g, d], availableReviewers);
+        });
     });
     return reviewerDict;
 };
 exports.selectReviewers = (numOfReviewers, reviewers, PR) => {
     const reviewerDict = exports.generateDictFromConfig(reviewers);
-    // select must reviewers
-    const selectedMustReviewers = lodash_1.default.sampleSize(reviewerDict.must[date_fns_1.format(new Date(), 'iii').toLowerCase()].filter((r) => r.name != PR.user.login), numOfReviewers.must);
-    // select other reviewers
-    const selectedOtherReviewers = lodash_1.default.sampleSize(reviewerDict.other[date_fns_1.format(new Date(), 'iii').toLowerCase()].filter((r) => r.name != PR.user.login), numOfReviewers.other);
-    return [...selectedMustReviewers, ...selectedOtherReviewers].map((r) => r.name);
+    let selectedReviewers = [];
+    Object.keys(reviewerDict).forEach((group) => {
+        const availableNames = reviewerDict[group][date_fns_1.format(new Date(), 'iii').toLowerCase()]
+            .filter((r) => r.name !== PR.user.login)
+            .map((r) => r.name);
+        const namesOfAlreadyRequestedReviewers = lodash_1.default.intersection(PR.requested_reviewers.map((r) => r.login), availableNames);
+        selectedReviewers = [
+            ...selectedReviewers,
+            ...lodash_1.default.sampleSize(availableNames.filter((r) => !namesOfAlreadyRequestedReviewers.includes(r)), numOfReviewers[group] - namesOfAlreadyRequestedReviewers.length),
+        ];
+    });
+    return selectedReviewers;
 };
 const setReviewers = (octokit, reviewers) => __awaiter(void 0, void 0, void 0, function* () {
     const [owner, repo] = (process.env.GITHUB_REPOSITORY || '').split('/');
@@ -46441,11 +46430,6 @@ exports.skipCondition = (PR, config) => {
     }
     // if PR's title contains WIP/wip, skip
     if (PR.title.includes('WIP') || PR.title.includes('wip')) {
-        return true;
-    }
-    // if num of requested reviewers are already more than config.numOfReviewers.must + config.numOfReviewers.other, skip
-    if (PR.requested_reviewers.length >=
-        config.numOfReviewers.must + config.numOfReviewers.other) {
         return true;
     }
     return false;
