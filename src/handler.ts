@@ -143,8 +143,12 @@ export const assignReviewers = async (
     reviewers,
     PR!
   );
-  info(
-    `Added reviewers to PR #${prNum}: ${nameOfSelectedReviewers.join(', ')}`
-  );
-  await setReviewers(octokit, nameOfSelectedReviewers);
+  if (nameOfSelectedReviewers.length > 0) {
+    info(
+      `Added reviewers to PR #${prNum}: ${nameOfSelectedReviewers.join(', ')}`
+    );
+    await setReviewers(octokit, nameOfSelectedReviewers);
+  } else {
+    info(`Added no reviewers`);
+  }
 };

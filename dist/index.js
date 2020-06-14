@@ -46446,8 +46446,13 @@ exports.assignReviewers = (octokit, config) => __awaiter(void 0, void 0, void 0,
         return;
     }
     const nameOfSelectedReviewers = exports.selectReviewers(numOfReviewers, reviewers, PR);
-    core_1.info(`Added reviewers to PR #${prNum}: ${nameOfSelectedReviewers.join(', ')}`);
-    yield setReviewers(octokit, nameOfSelectedReviewers);
+    if (nameOfSelectedReviewers.length > 0) {
+        core_1.info(`Added reviewers to PR #${prNum}: ${nameOfSelectedReviewers.join(', ')}`);
+        yield setReviewers(octokit, nameOfSelectedReviewers);
+    }
+    else {
+        core_1.info(`Added no reviewers`);
+    }
 });
 
 
