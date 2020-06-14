@@ -1,6 +1,7 @@
 import { getInput, setFailed, error } from '@actions/core';
 import { safeLoad } from 'js-yaml';
 import { readFileSync } from 'fs';
+import _ from 'lodash';
 
 export const dayOfWeek = [
   'mon',
@@ -76,6 +77,22 @@ export const validateConfig = (config: Config): boolean => {
     )
   ) {
     error('Invalid day is included');
+    return false;
+  }
+
+  // numOfReviewers must be provided
+  if (
+    !config.numOfReviewers ||
+    !config.numOfReviewers.must ||
+    !config.numOfReviewers.other
+  ) {
+    error('Invalid numOfReviewers');
+    return false;
+  }
+
+  // validate duplicated name
+  if (_.uniqBy(config.reviewers, 'name').length !== config.reviewers.length) {
+    error('Duplicated name');
     return false;
   }
   return true;

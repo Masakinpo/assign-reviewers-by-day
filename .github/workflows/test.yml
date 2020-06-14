@@ -1,19 +1,20 @@
-name: CI
+name: "build-test"
 
-on: [pull_request]
-
+on:
+  pull_request:
+    types: [ready_for_review]
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v1
-      - name: Setup NodeJs
-        uses: actions/setup-node@v1
+      - run: |
+          npm install
+          npm run all
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: ./
         with:
-          node-version: '12'
-      - name: Install Dependencies
-        run: yarn install
-      - name: Run test
-        run: yarn test
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"

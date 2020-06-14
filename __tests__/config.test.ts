@@ -85,4 +85,13 @@ describe('validate config test', () => {
       })
     ).toBe(false);
   });
+
+  test('invalid config: duplicated name', () => {
+    expect(
+      validateConfig({
+        reviewers: [{ name: 'messi' }, { name: 'messi' }],
+        numOfReviewers: { must: 0, other: 1 },
+      })
+    ).toBe(false);
+  });
 });
