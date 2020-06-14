@@ -1,4 +1,4 @@
-import { getInput, setFailed, error } from '@actions/core';
+import { getInput, setFailed } from '@actions/core';
 import { safeLoad } from 'js-yaml';
 import { readFileSync } from 'fs';
 import _ from 'lodash';
@@ -41,7 +41,7 @@ export const getConfig = (): Config | null => {
   try {
     return safeLoad(readFileSync(configPath, 'utf8'));
   } catch (error) {
-    setFailed(error.message);
+    throw new Error(error.message);
   }
 
   return null;
@@ -54,8 +54,9 @@ export const validateConfig = (config: Config): boolean => {
       (r) => !!r.day && r.day.some((d) => !listOfValidDay.includes(d!))
     )
   ) {
-    error(`Invalid day is included: ${config.reviewers.map((r) => r.day)}`);
-    return false;
+    throw new Error(
+      `Invalid day is included: ${config.reviewers.map((r) => r.day)}`
+    );
   }
 
   if (
@@ -66,10 +67,9 @@ export const validateConfig = (config: Config): boolean => {
     ) ||
     config.numOfReviewers.some((r) => !Number.isInteger(Object.values(r)[0]))
   ) {
-    error(
+    throw new Error(
       `numOfGroup must be provided for all groups: ${JSON.stringify(config)}`
     );
-    return false;
   }
   return true;
 };

@@ -299,10 +299,6 @@ describe('skipCondition', () => {
         title: '',
         user: { login: '' },
       },
-      {
-        reviewers: [],
-        numOfReviewers: [{}],
-      },
       true,
     ],
     [
@@ -312,10 +308,6 @@ describe('skipCondition', () => {
         requested_reviewers: [],
         title: 'WIP amazing changes',
         user: { login: '' },
-      },
-      {
-        reviewers: [],
-        numOfReviewers: [{}],
       },
       true,
     ],
@@ -327,15 +319,11 @@ describe('skipCondition', () => {
         title: 'wip amazing changes',
         user: { login: '' },
       },
-      {
-        reviewers: [],
-        numOfReviewers: [{}],
-      },
       true,
     ],
-  ] as Array<[string, PR, Config, boolean]>;
+  ] as Array<[string, PR, boolean]>;
 
-  test.each(testTable)('%s', (name, pr, config, expected) => {
-    expect(skipCondition(pr, config)).toBe(expected);
+  test.each(testTable)('%s', (name, pr, expected) => {
+    expect(skipCondition(pr)).toBe(expected);
   });
 });

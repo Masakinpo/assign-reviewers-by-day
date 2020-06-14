@@ -14025,21 +14025,19 @@ exports.getConfig = () => {
         return js_yaml_1.safeLoad(fs_1.readFileSync(configPath, 'utf8'));
     }
     catch (error) {
-        core_1.setFailed(error.message);
+        throw new Error(error.message);
     }
     return null;
 };
 exports.validateConfig = (config) => {
     // validate day
     if (config.reviewers.some((r) => !!r.day && r.day.some((d) => !listOfValidDay.includes(d)))) {
-        core_1.error(`Invalid day is included: ${config.reviewers.map((r) => r.day)}`);
-        return false;
+        throw new Error(`Invalid day is included: ${config.reviewers.map((r) => r.day)}`);
     }
     if (!config.numOfReviewers ||
         !lodash_1.default.isEqual(lodash_1.default.uniq(config.reviewers.map((r) => r.group)).sort(), lodash_1.default.uniq(config.numOfReviewers.map((r) => Object.keys(r)[0])).sort()) ||
         config.numOfReviewers.some((r) => !Number.isInteger(Object.values(r)[0]))) {
-        core_1.error(`numOfGroup must be provided for all groups: ${JSON.stringify(config)}`);
-        return false;
+        throw new Error(`numOfGroup must be provided for all groups: ${JSON.stringify(config)}`);
     }
     return true;
 };
@@ -46424,7 +46422,7 @@ const getPR = (octokit, owner, repo, prNum) => __awaiter(void 0, void 0, void 0,
     });
     return data;
 });
-exports.skipCondition = (PR, config) => {
+exports.skipCondition = (PR) => {
     if (!PR) {
         return true;
     }
@@ -46443,7 +46441,7 @@ exports.assignReviewers = (octokit, config) => __awaiter(void 0, void 0, void 0,
     const [owner, repo] = (process.env.GITHUB_REPOSITORY || '').split('/');
     const prNum = Number((process.env.GITHUB_REF || '').split('refs/pull/')[1].split('/')[0]);
     const PR = yield getPR(octokit, owner, repo, prNum);
-    if (exports.skipCondition(PR, config)) {
+    if (exports.skipCondition(PR)) {
         core_1.info(`skip to assign reviewers`);
         return;
     }

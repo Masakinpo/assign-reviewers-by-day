@@ -32,7 +32,7 @@ describe('validate config test', () => {
   });
 
   test('invalid config: numOfReviewers must be number', () => {
-    expect(
+    expect(() =>
       validateConfig({
         reviewers: [
           {
@@ -59,11 +59,11 @@ describe('validate config test', () => {
         // @ts-ignore
         numOfReviewers: [{ barcelona: 1, juventus: 'invalid', milan: 1 }],
       })
-    ).toBe(false);
+    ).toThrowError(/numOfGroup must be provided for all groups:/);
   });
 
   test('invalid config: numOfReviewers must be provided for all groups', () => {
-    expect(
+    expect(() =>
       validateConfig({
         reviewers: [
           {
@@ -89,11 +89,11 @@ describe('validate config test', () => {
         ],
         numOfReviewers: [{ barcelona: 1 }],
       })
-    ).toBe(false);
+    ).toThrowError(/numOfGroup must be provided for all groups:/);
   });
 
   test('invalid config: no numOfReviewers', () => {
-    expect(
+    expect(() =>
       // @ts-ignore
       validateConfig({
         reviewers: [
@@ -104,11 +104,11 @@ describe('validate config test', () => {
           },
         ],
       })
-    ).toBe(false);
+    ).toThrowError(/numOfGroup must be provided for all groups:/);
   });
 
   test('invalid config: invalid day', () => {
-    expect(
+    expect(() =>
       validateConfig({
         reviewers: [
           {
@@ -120,6 +120,6 @@ describe('validate config test', () => {
         ],
         numOfReviewers: [{ gods: 1 }],
       })
-    ).toBe(false);
+    ).toThrowError(/Invalid day is included/);
   });
 });
