@@ -1,8 +1,8 @@
 reviewers:
   - name: masakinpo
-    kind: must
+    group: contributers
   - name: shintaro2844
-    kind: must
+    group: contributers
 numOfReviewers:
-  - must: 1
-  - other: 0
+  - contributers: 1
+

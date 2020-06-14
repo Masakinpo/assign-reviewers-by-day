@@ -4625,12 +4625,14 @@ exports.run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const token = core_1.getInput('repo-token', { required: true });
         const config = config_1.getConfig();
-        if (!!config && config_1.validateConfig(config)) {
-            yield handler_1.assignReviewers(new rest_1.Octokit({ auth: token }), config);
+        const isValidConfig = !!config && config_1.validateConfig(config);
+        if (isValidConfig) {
+            return yield handler_1.assignReviewers(new rest_1.Octokit({ auth: token }), config);
         }
+        throw new Error(`invalid config (${JSON.stringify(config)})`);
     }
     catch (error) {
-        core_1.setFailed(error.message);
+        core_1.setFailed(error);
     }
 });
 exports.run();
@@ -14017,46 +14019,25 @@ const listOfValidDay = [
     'weekend',
     'everyday',
 ];
-const kindType = 'must';
 exports.getConfig = () => {
     const configPath = core_1.getInput('config', { required: true });
     try {
         return js_yaml_1.safeLoad(fs_1.readFileSync(configPath, 'utf8'));
     }
     catch (error) {
-        core_1.setFailed(error.message);
+        throw new Error(error.message);
     }
     return null;
 };
 exports.validateConfig = (config) => {
-    // validate number of reviewers
-    const { must: expectedNumMustReviewer, other: expectedNumOtherReviewer, } = config.numOfReviewers;
-    const numMustReviewers = config.reviewers.filter((e) => e.kind === 'must')
-        .length;
-    const numOtherReviewers = config.reviewers.length - numMustReviewers;
-    if (config.reviewers.length < 1 ||
-        numMustReviewers < expectedNumMustReviewer ||
-        numOtherReviewers < expectedNumOtherReviewer ||
-        expectedNumMustReviewer + expectedNumOtherReviewer < 1) {
-        core_1.error('Invalid number of reviewers');
-        return false;
-    }
     // validate day
     if (config.reviewers.some((r) => !!r.day && r.day.some((d) => !listOfValidDay.includes(d)))) {
-        core_1.error('Invalid day is included');
-        return false;
+        throw new Error(`Invalid day is included: ${config.reviewers.map((r) => r.day)}`);
     }
-    // numOfReviewers must be provided
     if (!config.numOfReviewers ||
-        !config.numOfReviewers.must ||
-        !config.numOfReviewers.other) {
-        core_1.error('Invalid numOfReviewers');
-        return false;
-    }
-    // validate duplicated name
-    if (lodash_1.default.uniqBy(config.reviewers, 'name').length !== config.reviewers.length) {
-        core_1.error('Duplicated name');
-        return false;
+        !lodash_1.default.isEqual(lodash_1.default.uniq(config.reviewers.map((r) => r.group)).sort(), lodash_1.default.uniq(config.numOfReviewers.map((r) => Object.keys(r)[0])).sort()) ||
+        config.numOfReviewers.some((r) => !Number.isInteger(Object.values(r)[0]))) {
+        throw new Error(`numOfGroup must be provided for all groups: ${JSON.stringify(config)}`);
     }
     return true;
 };
@@ -46388,28 +46369,38 @@ const core_1 = __webpack_require__(470);
 const date_fns_1 = __webpack_require__(684);
 const lodash_1 = __importDefault(__webpack_require__(557));
 const config_1 = __webpack_require__(478);
-const mustReviewerCond = (r) => r.kind === 'must';
-const otherReviewerCond = (r) => !r.kind || r.kind !== 'must';
 exports.generateDictFromConfig = (reviewers) => {
+    const groups = lodash_1.default.uniq(reviewers.map((r) => r.group));
     const reviewerDict = {};
-    config_1.dayOfWeek.forEach((d) => {
-        const availableReviewers = reviewers.filter((r) => !r.day ||
-            r.day.includes(d) ||
-            r.day.includes('everyday') ||
-            ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
-            (d !== 'sat' && d !== 'sun' && r.day.includes('weekday')));
-        lodash_1.default.set(reviewerDict, ['must', d], availableReviewers.filter((r) => mustReviewerCond(r)));
-        lodash_1.default.set(reviewerDict, ['other', d], availableReviewers.filter((r) => otherReviewerCond(r)));
+    groups.forEach((g) => {
+        config_1.dayOfWeek.forEach((d) => {
+            const availableReviewers = reviewers
+                .filter((r) => r.group === g)
+                .filter((r) => !r.day ||
+                r.day.includes(d) ||
+                r.day.includes('everyday') ||
+                ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
+                (d !== 'sat' && d !== 'sun' && r.day.includes('weekday')));
+            lodash_1.default.set(reviewerDict, [g, d], availableReviewers);
+        });
     });
     return reviewerDict;
 };
 exports.selectReviewers = (numOfReviewers, reviewers, PR) => {
     const reviewerDict = exports.generateDictFromConfig(reviewers);
-    // select must reviewers
-    const selectedMustReviewers = lodash_1.default.sampleSize(reviewerDict.must[date_fns_1.format(new Date(), 'iii').toLowerCase()].filter((r) => r.name != PR.user.login), numOfReviewers.must);
-    // select other reviewers
-    const selectedOtherReviewers = lodash_1.default.sampleSize(reviewerDict.other[date_fns_1.format(new Date(), 'iii').toLowerCase()].filter((r) => r.name != PR.user.login), numOfReviewers.other);
-    return [...selectedMustReviewers, ...selectedOtherReviewers].map((r) => r.name);
+    let selectedReviewers = [];
+    Object.keys(reviewerDict).forEach((group) => {
+        const availableNames = reviewerDict[group][date_fns_1.format(new Date(), 'iii').toLowerCase()]
+            .filter((r) => r.name !== PR.user.login)
+            .map((r) => r.name);
+        const namesOfAlreadyRequestedReviewers = lodash_1.default.intersection(PR.requested_reviewers.map((r) => r.login), availableNames);
+        selectedReviewers = [
+            ...selectedReviewers,
+            ...lodash_1.default.sampleSize(availableNames.filter((r) => !namesOfAlreadyRequestedReviewers.includes(r)), numOfReviewers.find((r) => !!r[group])[group] -
+                namesOfAlreadyRequestedReviewers.length),
+        ];
+    });
+    return selectedReviewers;
 };
 const setReviewers = (octokit, reviewers) => __awaiter(void 0, void 0, void 0, function* () {
     const [owner, repo] = (process.env.GITHUB_REPOSITORY || '').split('/');
@@ -46431,7 +46422,7 @@ const getPR = (octokit, owner, repo, prNum) => __awaiter(void 0, void 0, void 0,
     });
     return data;
 });
-exports.skipCondition = (PR, config) => {
+exports.skipCondition = (PR) => {
     if (!PR) {
         return true;
     }
@@ -46443,11 +46434,6 @@ exports.skipCondition = (PR, config) => {
     if (PR.title.includes('WIP') || PR.title.includes('wip')) {
         return true;
     }
-    // if num of requested reviewers are already more than config.numOfReviewers.must + config.numOfReviewers.other, skip
-    if (PR.requested_reviewers.length >=
-        config.numOfReviewers.must + config.numOfReviewers.other) {
-        return true;
-    }
     return false;
 };
 exports.assignReviewers = (octokit, config) => __awaiter(void 0, void 0, void 0, function* () {
@@ -46455,13 +46441,18 @@ exports.assignReviewers = (octokit, config) => __awaiter(void 0, void 0, void 0,
     const [owner, repo] = (process.env.GITHUB_REPOSITORY || '').split('/');
     const prNum = Number((process.env.GITHUB_REF || '').split('refs/pull/')[1].split('/')[0]);
     const PR = yield getPR(octokit, owner, repo, prNum);
-    if (exports.skipCondition(PR, config)) {
+    if (exports.skipCondition(PR)) {
         core_1.info(`skip to assign reviewers`);
         return;
     }
     const nameOfSelectedReviewers = exports.selectReviewers(numOfReviewers, reviewers, PR);
-    core_1.info(`Added reviewers to PR #${prNum}: ${nameOfSelectedReviewers.join(', ')}`);
-    yield setReviewers(octokit, nameOfSelectedReviewers);
+    if (nameOfSelectedReviewers.length > 0) {
+        core_1.info(`Added reviewers to PR #${prNum}: ${nameOfSelectedReviewers.join(', ')}`);
+        yield setReviewers(octokit, nameOfSelectedReviewers);
+    }
+    else {
+        core_1.info(`Added no reviewers`);
+    }
 });
 
 

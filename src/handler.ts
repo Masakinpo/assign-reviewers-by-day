@@ -5,70 +5,63 @@ import _ from 'lodash';
 import { Config, dayOfWeek, NumOfReviewersType, ReviewerType } from './config';
 
 type ReviewerDict = {
-  must: {
-    [key in typeof dayOfWeek[number]]: ReviewerType[];
-  };
-  other: {
+  [key in ReviewerType['group']]: {
     [key in typeof dayOfWeek[number]]: ReviewerType[];
   };
 };
-
-const mustReviewerCond = (r: ReviewerType): boolean => r.kind === 'must';
-const otherReviewerCond = (r: ReviewerType): boolean =>
-  !r.kind || r.kind !== 'must';
 
 export const generateDictFromConfig = (
   reviewers: ReviewerType[]
 ): ReviewerDict => {
-  const reviewerDict = {};
-  dayOfWeek.forEach((d) => {
-    const availableReviewers = reviewers.filter(
-      (r) =>
-        !r.day ||
-        r.day.includes(d) ||
-        r.day.includes('everyday') ||
-        ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
-        (d !== 'sat' && d !== 'sun' && r.day.includes('weekday'))
-    );
-    _.set<ReviewerDict>(
-      reviewerDict,
-      ['must', d],
-      availableReviewers.filter((r) => mustReviewerCond(r))
-    );
-    _.set<ReviewerDict>(
-      reviewerDict,
-      ['other', d],
-      availableReviewers.filter((r) => otherReviewerCond(r))
-    );
+  const groups = _.uniq(reviewers.map((r) => r.group));
+  const reviewerDict: ReviewerDict = {};
+  groups.forEach((g) => {
+    dayOfWeek.forEach((d) => {
+      const availableReviewers = reviewers
+        .filter((r) => r.group === g)
+        .filter(
+          (r) =>
+            !r.day ||
+            r.day.includes(d) ||
+            r.day.includes('everyday') ||
+            ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
+            (d !== 'sat' && d !== 'sun' && r.day.includes('weekday'))
+        );
+      _.set<ReviewerDict>(reviewerDict, [g, d], availableReviewers);
+    });
   });
-  return reviewerDict as ReviewerDict;
+  return reviewerDict;
 };
 
 export const selectReviewers = (
-  numOfReviewers: NumOfReviewersType,
+  numOfReviewers: NumOfReviewersType[],
   reviewers: ReviewerType[],
   PR: PR
 ): string[] => {
   const reviewerDict = generateDictFromConfig(reviewers);
-
-  // select must reviewers
-  const selectedMustReviewers: ReviewerType[] = _.sampleSize(
-    reviewerDict.must[
+  let selectedReviewers: string[] = [];
+  Object.keys(reviewerDict).forEach((group) => {
+    const availableNames = reviewerDict[group][
       format(new Date(), 'iii').toLowerCase() as typeof dayOfWeek[number]
-    ].filter((r) => r.name != PR.user.login),
-    numOfReviewers.must
-  );
-  // select other reviewers
-  const selectedOtherReviewers: ReviewerType[] = _.sampleSize(
-    reviewerDict.other[
-      format(new Date(), 'iii').toLowerCase() as typeof dayOfWeek[number]
-    ].filter((r) => r.name != PR.user.login),
-    numOfReviewers.other
-  );
-
-  return [...selectedMustReviewers, ...selectedOtherReviewers].map(
-    (r) => r.name
-  );
+    ]
+      .filter((r) => r.name !== PR.user.login)
+      .map((r) => r.name);
+    const namesOfAlreadyRequestedReviewers = _.intersection(
+      PR.requested_reviewers.map((r) => r.login),
+      availableNames
+    );
+    selectedReviewers = [
+      ...selectedReviewers,
+      ..._.sampleSize<string>(
+        availableNames.filter(
+          (r) => !namesOfAlreadyRequestedReviewers.includes(r)
+        ),
+        numOfReviewers.find((r) => !!r[group])![group] -
+          namesOfAlreadyRequestedReviewers.length
+      ),
+    ];
+  });
+  return selectedReviewers;
 };
 
 const setReviewers = async (
@@ -116,7 +109,7 @@ const getPR = async (
   return data;
 };
 
-export const skipCondition = (PR: PR | null, config: Config) => {
+export const skipCondition = (PR: PR | null): boolean => {
   if (!PR) {
     return true;
   }
@@ -126,13 +119,6 @@ export const skipCondition = (PR: PR | null, config: Config) => {
   }
   // if PR's title contains WIP/wip, skip
   if (PR.title.includes('WIP') || PR.title.includes('wip')) {
-    return true;
-  }
-  // if num of requested reviewers are already more than config.numOfReviewers.must + config.numOfReviewers.other, skip
-  if (
-    PR.requested_reviewers.length >=
-    config.numOfReviewers.must + config.numOfReviewers.other
-  ) {
     return true;
   }
   return false;
@@ -148,7 +134,7 @@ export const assignReviewers = async (
     (process.env.GITHUB_REF || '').split('refs/pull/')[1].split('/')[0]
   );
   const PR: PR | null = await getPR(octokit, owner, repo, prNum);
-  if (skipCondition(PR, config)) {
+  if (skipCondition(PR)) {
     info(`skip to assign reviewers`);
     return;
   }
@@ -157,8 +143,12 @@ export const assignReviewers = async (
     reviewers,
     PR!
   );
-  info(
-    `Added reviewers to PR #${prNum}: ${nameOfSelectedReviewers.join(', ')}`
-  );
-  await setReviewers(octokit, nameOfSelectedReviewers);
+  if (nameOfSelectedReviewers.length > 0) {
+    info(
+      `Added reviewers to PR #${prNum}: ${nameOfSelectedReviewers.join(', ')}`
+    );
+    await setReviewers(octokit, nameOfSelectedReviewers);
+  } else {
+    info(`Added no reviewers`);
+  }
 };

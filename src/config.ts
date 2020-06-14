@@ -1,4 +1,4 @@
-import { getInput, setFailed, error } from '@actions/core';
+import { getInput, setFailed } from '@actions/core';
 import { safeLoad } from 'js-yaml';
 import { readFileSync } from 'fs';
 import _ from 'lodash';
@@ -20,22 +20,19 @@ const listOfValidDay = [
   'everyday',
 ] as const;
 
-const kindType = 'must' as const;
-
 export type ReviewerType = {
   name: string;
-  kind?: typeof kindType;
+  group: string;
   day?: Array<typeof listOfValidDay[number]>;
 };
 
 export type NumOfReviewersType = {
-  must: number;
-  other: number;
+  [key in Config['reviewers'][number]['group']]: number;
 };
 
 export type Config = {
   reviewers: ReviewerType[];
-  numOfReviewers: NumOfReviewersType;
+  numOfReviewers: NumOfReviewersType[];
 };
 
 export const getConfig = (): Config | null => {
@@ -44,56 +41,35 @@ export const getConfig = (): Config | null => {
   try {
     return safeLoad(readFileSync(configPath, 'utf8'));
   } catch (error) {
-    setFailed(error.message);
+    throw new Error(error.message);
   }
 
   return null;
 };
 
 export const validateConfig = (config: Config): boolean => {
-  // validate number of reviewers
-  const {
-    must: expectedNumMustReviewer,
-    other: expectedNumOtherReviewer,
-  } = config.numOfReviewers;
-  const numMustReviewers = config.reviewers.filter((e) => e.kind === 'must')
-    .length;
-  const numOtherReviewers = config.reviewers.length - numMustReviewers;
-
-  if (
-    config.reviewers.length < 1 ||
-    numMustReviewers < expectedNumMustReviewer ||
-    numOtherReviewers < expectedNumOtherReviewer ||
-    expectedNumMustReviewer + expectedNumOtherReviewer < 1
-  ) {
-    error('Invalid number of reviewers');
-    return false;
-  }
-
   // validate day
   if (
     config.reviewers.some(
       (r) => !!r.day && r.day.some((d) => !listOfValidDay.includes(d!))
     )
   ) {
-    error('Invalid day is included');
-    return false;
+    throw new Error(
+      `Invalid day is included: ${config.reviewers.map((r) => r.day)}`
+    );
   }
 
-  // numOfReviewers must be provided
   if (
     !config.numOfReviewers ||
-    !config.numOfReviewers.must ||
-    !config.numOfReviewers.other
+    !_.isEqual(
+      _.uniq(config.reviewers.map((r) => r.group)).sort(),
+      _.uniq(config.numOfReviewers.map((r) => Object.keys(r)[0])).sort()
+    ) ||
+    config.numOfReviewers.some((r) => !Number.isInteger(Object.values(r)[0]))
   ) {
-    error('Invalid numOfReviewers');
-    return false;
-  }
-
-  // validate duplicated name
-  if (_.uniqBy(config.reviewers, 'name').length !== config.reviewers.length) {
-    error('Duplicated name');
-    return false;
+    throw new Error(
+      `numOfGroup must be provided for all groups: ${JSON.stringify(config)}`
+    );
   }
   return true;
 };

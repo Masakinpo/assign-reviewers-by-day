@@ -7,91 +7,119 @@ describe('validate config test', () => {
         reviewers: [
           {
             name: 'messi',
-            kind: 'must',
+            group: 'barcelona',
             day: ['everyday'],
           },
           {
             name: 'iniesta',
+            group: 'barcelona',
             day: ['mon', 'tue', 'wed'],
           },
           {
             name: 'cr7',
+            group: 'juventus',
             day: ['weekday'],
           },
           {
             name: 'zlatan',
+            group: 'milan',
             day: ['fri'],
           },
-          {
-            name: 'aubameyang',
-            day: ['weekend'],
-          },
         ],
-        numOfReviewers: { must: 1, other: 2 },
+        numOfReviewers: [{ barcelona: 1 }, { milan: 1 }, { juventus: 1 }],
       })
     ).toBe(true);
   });
 
-  test('invalid config: invalid must numOfReviewers', () => {
-    expect(
+  test('invalid config: numOfReviewers must be number', () => {
+    expect(() =>
       validateConfig({
         reviewers: [
           {
             name: 'messi',
-            kind: 'must',
+            group: 'barcelona',
             day: ['everyday'],
           },
+          {
+            name: 'iniesta',
+            group: 'barcelona',
+            day: ['mon', 'tue', 'wed'],
+          },
+          {
+            name: 'cr7',
+            group: 'juventus',
+            day: ['weekday'],
+          },
+          {
+            name: 'zlatan',
+            group: 'milan',
+            day: ['fri'],
+          },
         ],
-        numOfReviewers: { must: 2, other: 0 },
+        // @ts-ignore
+        numOfReviewers: [{ barcelona: 1, juventus: 'invalid', milan: 1 }],
       })
-    ).toBe(false);
+    ).toThrowError(/numOfGroup must be provided for all groups:/);
   });
 
-  test('invalid config: invalid other numOfReviewers', () => {
-    expect(
+  test('invalid config: numOfReviewers must be provided for all groups', () => {
+    expect(() =>
       validateConfig({
         reviewers: [
           {
             name: 'messi',
+            group: 'barcelona',
             day: ['everyday'],
           },
+          {
+            name: 'iniesta',
+            group: 'barcelona',
+            day: ['mon', 'tue', 'wed'],
+          },
+          {
+            name: 'cr7',
+            group: 'juventus',
+            day: ['weekday'],
+          },
+          {
+            name: 'zlatan',
+            group: 'milan',
+            day: ['fri'],
+          },
         ],
-        numOfReviewers: { must: 0, other: 2 },
+        numOfReviewers: [{ barcelona: 1 }],
       })
-    ).toBe(false);
+    ).toThrowError(/numOfGroup must be provided for all groups:/);
   });
 
-  test('invalid config: 0 numOfReviewers in total', () => {
-    expect(
+  test('invalid config: no numOfReviewers', () => {
+    expect(() =>
+      // @ts-ignore
       validateConfig({
-        reviewers: [],
-        numOfReviewers: { must: 0, other: 0 },
+        reviewers: [
+          {
+            name: 'messi',
+            group: 'gods',
+            day: ['fri'],
+          },
+        ],
       })
-    ).toBe(false);
+    ).toThrowError(/numOfGroup must be provided for all groups:/);
   });
 
   test('invalid config: invalid day', () => {
-    expect(
+    expect(() =>
       validateConfig({
         reviewers: [
           {
             name: 'messi',
-            kind: 'must',
+            group: 'gods',
             // @ts-ignore
             day: ['freitag'],
           },
         ],
-        numOfReviewers: { must: 1, other: 0 },
+        numOfReviewers: [{ gods: 1 }],
       })
-    ).toBe(false);
-  });
-
-  test('invalid config: duplicated name', () => {
-    expect(
-      validateConfig({
-        reviewers: [{ name: 'messi' }, { name: 'messi' }],
-        numOfReviewers: { must: 0, other: 1 },
-      })
-    ).toBe(false);
+    ).toThrowError(/Invalid day is included/);
   });
 });
