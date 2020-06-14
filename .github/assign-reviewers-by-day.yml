@@ -4,5 +4,3 @@ reviewers:
   - name: shintaro2844
     kind: must
 numOfReviewers:
-  - must: 1
-  - other: 0

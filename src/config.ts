@@ -20,17 +20,14 @@ const listOfValidDay = [
   'everyday',
 ] as const;
 
-const kindType = 'must' as const;
-
 export type ReviewerType = {
   name: string;
-  kind?: typeof kindType;
+  group: string[];
   day?: Array<typeof listOfValidDay[number]>;
 };
 
 export type NumOfReviewersType = {
-  must: number;
-  other: number;
+  [key in ReviewerType['group'][number]]: number;
 };
 
 export type Config = {
@@ -51,25 +48,6 @@ export const getConfig = (): Config | null => {
 };
 
 export const validateConfig = (config: Config): boolean => {
-  // validate number of reviewers
-  const {
-    must: expectedNumMustReviewer,
-    other: expectedNumOtherReviewer,
-  } = config.numOfReviewers;
-  const numMustReviewers = config.reviewers.filter((e) => e.kind === 'must')
-    .length;
-  const numOtherReviewers = config.reviewers.length - numMustReviewers;
-
-  if (
-    config.reviewers.length < 1 ||
-    numMustReviewers < expectedNumMustReviewer ||
-    numOtherReviewers < expectedNumOtherReviewer ||
-    expectedNumMustReviewer + expectedNumOtherReviewer < 1
-  ) {
-    error('Invalid number of reviewers');
-    return false;
-  }
-
   // validate day
   if (
     config.reviewers.some(
