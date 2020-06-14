@@ -1,8 +1,7 @@
 name: "build-test"
 
-on:
-  pull_request:
-    types: [ready_for_review]
+on: [pull_request]
+
 jobs:
   build:
     runs-on: ubuntu-latest
