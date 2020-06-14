@@ -61,9 +61,9 @@ export const validateConfig = (config: Config): boolean => {
   const groups = _.uniq(config.reviewers.map((r) => r.group));
 
   if (
-    groups.some(
+    groups.every(
       (g) =>
-        !Object.keys(config.numOfReviewers).includes(g) ||
+        Object.keys(config.numOfReviewers).includes(g) &&
         Number.isInteger(config.numOfReviewers[g])
     )
   ) {
