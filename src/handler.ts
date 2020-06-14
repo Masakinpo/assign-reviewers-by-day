@@ -157,6 +157,8 @@ export const assignReviewers = async (
     reviewers,
     PR!
   );
-  info(`Added reviewers to PR #${prNum}: ${nameOfSelectedReviewers.join(', ')}`)
+  info(
+    `Added reviewers to PR #${prNum}: ${nameOfSelectedReviewers.join(', ')}`
+  );
   await setReviewers(octokit, nameOfSelectedReviewers);
 };
