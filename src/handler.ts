@@ -34,7 +34,7 @@ export const generateDictFromConfig = (
 };
 
 export const selectReviewers = (
-  numOfReviewers: NumOfReviewersType,
+  numOfReviewers: NumOfReviewersType[],
   reviewers: ReviewerType[],
   PR: PR
 ): string[] => {
@@ -56,7 +56,8 @@ export const selectReviewers = (
         availableNames.filter(
           (r) => !namesOfAlreadyRequestedReviewers.includes(r)
         ),
-        numOfReviewers[group] - namesOfAlreadyRequestedReviewers.length
+        numOfReviewers.find((r) => !!r[group])![group] -
+          namesOfAlreadyRequestedReviewers.length
       ),
     ];
   });

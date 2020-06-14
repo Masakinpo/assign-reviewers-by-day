@@ -26,7 +26,7 @@ describe('validate config test', () => {
             day: ['fri'],
           },
         ],
-        numOfReviewers: { barcelona: 1, juventus: 1, milan: 1 },
+        numOfReviewers: [{ barcelona: 1 }, { juventus: 1 }, { milan: 1 }],
       })
     ).toBe(true);
   });
@@ -56,7 +56,22 @@ describe('validate config test', () => {
             day: ['fri'],
           },
         ],
-        numOfReviewers: { barcelona: 1 },
+        numOfReviewers: [{ barcelona: 1 }],
+      })
+    ).toBe(false);
+  });
+
+  test('invalid config: no numOfReviewers', () => {
+    expect(
+      validateConfig({
+        reviewers: [
+          {
+            name: 'messi',
+            group: 'gods',
+            // @ts-ignore
+            day: ['freitag'],
+          },
+        ],
       })
     ).toBe(false);
   });
@@ -72,7 +87,7 @@ describe('validate config test', () => {
             day: ['freitag'],
           },
         ],
-        numOfReviewers: { gods: 1 },
+        numOfReviewers: [{ gods: 1 }],
       })
     ).toBe(false);
   });

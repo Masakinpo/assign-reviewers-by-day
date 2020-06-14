@@ -110,7 +110,7 @@ describe('selectReviewers', () => {
     [
       0,
       'case2: mon',
-      { gods: 2 },
+      [{ gods: 2 }],
       reviewers2,
       ['messi', 'cr7'],
       ['messi', 'zlatan'],
@@ -119,7 +119,7 @@ describe('selectReviewers', () => {
     [
       1,
       'case2: tue',
-      { gods: 2 },
+      [{ gods: 2 }],
       reviewers2,
       ['messi', 'cr7'],
       ['messi', 'zlatan'],
@@ -128,7 +128,7 @@ describe('selectReviewers', () => {
     [
       2,
       'case2: wed',
-      { gods: 2 },
+      [{ gods: 2 }],
       reviewers2,
       ['messi', 'cr7'],
       ['messi', 'zlatan'],
@@ -137,7 +137,7 @@ describe('selectReviewers', () => {
     [
       3,
       'case2: thu',
-      { gods: 2 },
+      [{ gods: 2 }],
       reviewers2,
       ['messi', 'cr7'],
       ['messi', 'zlatan'],
@@ -146,7 +146,7 @@ describe('selectReviewers', () => {
     [
       4,
       'case2: fri',
-      { gods: 2 },
+      [{ gods: 2 }],
       reviewers2,
       ['messi', 'cr7'],
       ['messi', 'zlatan'],
@@ -155,7 +155,7 @@ describe('selectReviewers', () => {
     [
       5,
       'case2: sat',
-      { gods: 2 },
+      [{ gods: 2 }],
       reviewers2,
       ['messi', 'cr7'],
       ['messi', 'zlatan'],
@@ -164,7 +164,7 @@ describe('selectReviewers', () => {
     [
       6,
       'case2: sun',
-      { gods: 2 },
+      [{ gods: 2 }],
       reviewers2,
       ['messi', 'cr7'],
       ['messi', 'zlatan'],
@@ -174,7 +174,7 @@ describe('selectReviewers', () => {
     [
       number,
       string,
-      NumOfReviewersType,
+      NumOfReviewersType[],
       ReviewerType[],
       string[],
       string[],
@@ -217,15 +217,15 @@ describe('selectReviewers: some reviewer is already requested', () => {
   });
 
   const testTable = [
-    [0, 'case2: mon', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
-    [1, 'case2: tue', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
-    [2, 'case2: wed', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
-    [3, 'case2: thu', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
-    [4, 'case2: fri', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
-    [5, 'case2: sat', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
-    [6, 'case2: sun', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
+    [0, 'case2: mon', [{ gods: 2 }], reviewers2, ['cr7'], ['zlatan']],
+    [1, 'case2: tue', [{ gods: 2 }], reviewers2, ['cr7'], ['zlatan']],
+    [2, 'case2: wed', [{ gods: 2 }], reviewers2, ['cr7'], ['zlatan']],
+    [3, 'case2: thu', [{ gods: 2 }], reviewers2, ['cr7'], ['zlatan']],
+    [4, 'case2: fri', [{ gods: 2 }], reviewers2, ['cr7'], ['zlatan']],
+    [5, 'case2: sat', [{ gods: 2 }], reviewers2, ['cr7'], ['zlatan']],
+    [6, 'case2: sun', [{ gods: 2 }], reviewers2, ['cr7'], ['zlatan']],
   ] as Array<
-    [number, string, NumOfReviewersType, ReviewerType[], string[], string[]]
+    [number, string, NumOfReviewersType[], ReviewerType[], string[], string[]]
   >;
 
   test.each(testTable)(
@@ -263,14 +263,14 @@ describe('selectReviewers: exclude author', () => {
   });
 
   const testTable = [
-    [0, 'mon', { barcelona: 1 }, barcelona, []],
-    [1, 'tue', { barcelona: 1 }, barcelona, ['iniesta']],
-    [2, 'wed', { barcelona: 1 }, barcelona, []],
-    [3, 'thu', { barcelona: 1 }, barcelona, ['iniesta']],
-    [4, 'fri', { barcelona: 1 }, barcelona, []],
-    [5, 'sat', { barcelona: 1 }, barcelona, []],
-    [6, 'sun', { barcelona: 1 }, barcelona, []],
-  ] as Array<[number, string, NumOfReviewersType, ReviewerType[], string[]]>;
+    [0, 'mon', [{ barcelona: 1 }], barcelona, []],
+    [1, 'tue', [{ barcelona: 1 }], barcelona, ['iniesta']],
+    [2, 'wed', [{ barcelona: 1 }], barcelona, []],
+    [3, 'thu', [{ barcelona: 1 }], barcelona, ['iniesta']],
+    [4, 'fri', [{ barcelona: 1 }], barcelona, []],
+    [5, 'sat', [{ barcelona: 1 }], barcelona, []],
+    [6, 'sun', [{ barcelona: 1 }], barcelona, []],
+  ] as Array<[number, string, NumOfReviewersType[], ReviewerType[], string[]]>;
 
   test.each(testTable)(
     '%i: %s',
@@ -301,7 +301,7 @@ describe('skipCondition', () => {
       },
       {
         reviewers: [],
-        numOfReviewers: {},
+        numOfReviewers: [{}],
       },
       true,
     ],
@@ -315,7 +315,7 @@ describe('skipCondition', () => {
       },
       {
         reviewers: [],
-        numOfReviewers: {},
+        numOfReviewers: [{}],
       },
       true,
     ],
@@ -329,7 +329,7 @@ describe('skipCondition', () => {
       },
       {
         reviewers: [],
-        numOfReviewers: {},
+        numOfReviewers: [{}],
       },
       true,
     ],
