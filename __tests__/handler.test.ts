@@ -74,25 +74,25 @@ describe('generateDictFromConfig test', () => {
   });
 });
 
+const reviewers2: ReviewerType[] = [
+  {
+    name: 'messi',
+    group: 'gods',
+  },
+  {
+    name: 'zlatan',
+    group: 'gods',
+  },
+  {
+    name: 'cr7',
+    group: 'gods',
+  },
+];
+
 describe('selectReviewers', () => {
   const OriginalDate = Date;
   let now: Date;
   let spiedDate: jest.SpyInstance;
-
-  const reviewers2: ReviewerType[] = [
-    {
-      name: 'messi',
-      group: 'gods',
-    },
-    {
-      name: 'zlatan',
-      group: 'gods',
-    },
-    {
-      name: 'cr7',
-      group: 'gods',
-    },
-  ];
 
   beforeEach(() => {
     now = new OriginalDate('2020/6/8 12:00:00'); // Monday
@@ -189,6 +189,52 @@ describe('selectReviewers', () => {
       const selectedReviewers = selectReviewers(numOfReviewers, reviewers, {
         draft: false,
         requested_reviewers: [],
+        title: '',
+        user: { login: '' },
+      }).sort();
+      expect(expected.some((e) => _.isEqual(e.sort(), selectedReviewers))).toBe(
+        true
+      );
+    }
+  );
+});
+
+describe('selectReviewers: some reviewer is already requested', () => {
+  const OriginalDate = Date;
+  let now: Date;
+  let spiedDate: jest.SpyInstance;
+
+  beforeEach(() => {
+    now = new OriginalDate('2020/6/8 12:00:00'); // Monday
+    spiedDate = jest.spyOn(global, 'Date').mockImplementation(
+      // @ts-ignore
+      () => now
+    );
+  });
+
+  afterEach(() => {
+    spiedDate.mockRestore();
+  });
+
+  const testTable = [
+    [0, 'case2: mon', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
+    [1, 'case2: tue', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
+    [2, 'case2: wed', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
+    [3, 'case2: thu', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
+    [4, 'case2: fri', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
+    [5, 'case2: sat', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
+    [6, 'case2: sun', { gods: 2 }, reviewers2, ['cr7'], ['zlatan']],
+  ] as Array<
+    [number, string, NumOfReviewersType, ReviewerType[], string[], string[]]
+  >;
+
+  test.each(testTable)(
+    '%i: %s',
+    (num, testName, numOfReviewers, reviewers, ...expected) => {
+      now.setDate(now.getDate() + num);
+      const selectedReviewers = selectReviewers(numOfReviewers, reviewers, {
+        draft: false,
+        requested_reviewers: [{ login: 'messi' }],
         title: '',
         user: { login: '' },
       }).sort();
