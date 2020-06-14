@@ -11,7 +11,7 @@ export const run = async (): Promise<void> => {
     if (isValidConfig) {
       return await assignReviewers(new Octokit({ auth: token }), config!);
     }
-    return setFailed(`invalid config (${JSON.stringify(config)})`);
+    throw new Error(`invalid config (${JSON.stringify(config)})`);
   } catch (error) {
     setFailed(error);
   }

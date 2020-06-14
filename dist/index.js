@@ -4625,12 +4625,14 @@ exports.run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const token = core_1.getInput('repo-token', { required: true });
         const config = config_1.getConfig();
-        if (!!config && config_1.validateConfig(config)) {
-            yield handler_1.assignReviewers(new rest_1.Octokit({ auth: token }), config);
+        const isValidConfig = !!config && config_1.validateConfig(config);
+        if (isValidConfig) {
+            return yield handler_1.assignReviewers(new rest_1.Octokit({ auth: token }), config);
         }
+        throw new Error(`invalid config (${JSON.stringify(config)})`);
     }
     catch (error) {
-        core_1.setFailed(error.message);
+        core_1.setFailed(error);
     }
 });
 exports.run();
@@ -14030,11 +14032,12 @@ exports.getConfig = () => {
 exports.validateConfig = (config) => {
     // validate day
     if (config.reviewers.some((r) => !!r.day && r.day.some((d) => !listOfValidDay.includes(d)))) {
-        core_1.error('Invalid day is included');
+        core_1.error(`Invalid day is included: ${config.reviewers.map((r) => r.day)}`);
         return false;
     }
-    const groups = lodash_1.default.uniq(config.reviewers.map((r) => r.group));
-    if (groups.some((g) => !config.numOfReviewers[g])) {
+    if (!config.numOfReviewers ||
+        !lodash_1.default.isEqual(lodash_1.default.uniq(config.reviewers.map((r) => r.group)).sort(), lodash_1.default.uniq(config.numOfReviewers.map((r) => Object.keys(r)[0])).sort()) ||
+        config.numOfReviewers.some((r) => !Number.isInteger(Object.values(r)[0]))) {
         core_1.error(`numOfGroup must be provided for all groups: ${JSON.stringify(config)}`);
         return false;
     }
@@ -46395,7 +46398,8 @@ exports.selectReviewers = (numOfReviewers, reviewers, PR) => {
         const namesOfAlreadyRequestedReviewers = lodash_1.default.intersection(PR.requested_reviewers.map((r) => r.login), availableNames);
         selectedReviewers = [
             ...selectedReviewers,
-            ...lodash_1.default.sampleSize(availableNames.filter((r) => !namesOfAlreadyRequestedReviewers.includes(r)), numOfReviewers[group] - namesOfAlreadyRequestedReviewers.length),
+            ...lodash_1.default.sampleSize(availableNames.filter((r) => !namesOfAlreadyRequestedReviewers.includes(r)), numOfReviewers.find((r) => !!r[group])[group] -
+                namesOfAlreadyRequestedReviewers.length),
         ];
     });
     return selectedReviewers;

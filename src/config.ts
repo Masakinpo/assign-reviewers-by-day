@@ -54,17 +54,17 @@ export const validateConfig = (config: Config): boolean => {
       (r) => !!r.day && r.day.some((d) => !listOfValidDay.includes(d!))
     )
   ) {
-    error('Invalid day is included');
+    error(`Invalid day is included: ${config.reviewers.map((r) => r.day)}`);
     return false;
   }
 
-  const groups = _.uniq(config.reviewers.map((r) => r.group));
-
   if (
     !config.numOfReviewers ||
-    groups.every((g) => {
-      config.numOfReviewers.some((r) => !!r[g] && Number.isInteger(r[g]));
-    })
+    !_.isEqual(
+      _.uniq(config.reviewers.map((r) => r.group)).sort(),
+      _.uniq(config.numOfReviewers.map((r) => Object.keys(r)[0])).sort()
+    ) ||
+    config.numOfReviewers.some((r) => !Number.isInteger(Object.values(r)[0]))
   ) {
     error(
       `numOfGroup must be provided for all groups: ${JSON.stringify(config)}`

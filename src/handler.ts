@@ -109,7 +109,7 @@ const getPR = async (
   return data;
 };
 
-export const skipCondition = (PR: PR | null, config: Config): boolean => {
+export const skipCondition = (PR: PR | null): boolean => {
   if (!PR) {
     return true;
   }
@@ -134,7 +134,7 @@ export const assignReviewers = async (
     (process.env.GITHUB_REF || '').split('refs/pull/')[1].split('/')[0]
   );
   const PR: PR | null = await getPR(octokit, owner, repo, prNum);
-  if (skipCondition(PR, config)) {
+  if (skipCondition(PR)) {
     info(`skip to assign reviewers`);
     return;
   }
