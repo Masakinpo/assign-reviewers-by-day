@@ -1,5 +1,10 @@
-import { generateDictFromConfig, selectReviewers } from '../src/handler';
-import { NumOfReviewersType, ReviewerType } from '../src/config';
+import {
+  generateDictFromConfig,
+  PR,
+  selectReviewers,
+  skipCondition,
+} from '../src/handler';
+import { Config, NumOfReviewersType, ReviewerType } from '../src/config';
 import _ from 'lodash';
 
 const reviewers: ReviewerType[] = [
@@ -106,8 +111,8 @@ describe('selectReviewers', () => {
     [2, 'case1: wed', { must: 1, other: 1 }, reviewers, ['messi', 'cr7']],
     [3, 'case1: thu', { must: 1, other: 1 }, reviewers, ['messi', 'zlatan']],
     [4, 'case1: fri', { must: 1, other: 1 }, reviewers, ['messi', 'cr7']],
-    [5, 'case1: sat', { must: 1, other: 1 }, reviewers, ['aubameyang', 'cr7']],
-    [6, 'case1: sun', { must: 1, other: 1 }, reviewers, ['aubameyang', 'cr7']],
+    [5, 'case1: sat', { must: 1, other: 1 }, reviewers, ['aubameyang']],
+    [6, 'case1: sun', { must: 1, other: 1 }, reviewers, ['aubameyang']],
     [
       0,
       'case2: mon',
@@ -204,9 +209,9 @@ describe('selectReviewers', () => {
       'case3: sun',
       { must: 0, other: 2 },
       reviewers3,
-      ['aubameyang', 'messi'],
-      ['aubameyang', 'zlatan'],
-      ['aubameyang', 'cr7'],
+      ['aubameyang'],
+      ['aubameyang'],
+      ['aubameyang'],
     ],
   ] as Array<[number, string, NumOfReviewersType, ReviewerType[], string[]]>;
 
@@ -214,13 +219,124 @@ describe('selectReviewers', () => {
     '%i: %s',
     (num, testName, numOfReviewers, reviewers, ...expected) => {
       now.setDate(now.getDate() + num);
-      const selectedReviewers = selectReviewers(
-        numOfReviewers,
-        reviewers
-      ).sort();
+      const selectedReviewers = selectReviewers(numOfReviewers, reviewers, {
+        draft: false,
+        requested_reviewers: [],
+        title: '',
+        user: { login: '' },
+      }).sort();
       expect(expected.some((e) => _.isEqual(e.sort(), selectedReviewers))).toBe(
         true
       );
     }
   );
+});
+
+describe('selectReviewers: exclude authoer', () => {
+  const OriginalDate = Date;
+  let now: Date;
+  let spiedDate: jest.SpyInstance;
+
+  beforeEach(() => {
+    now = new OriginalDate('2020/6/8 12:00:00'); // Monday
+    spiedDate = jest.spyOn(global, 'Date').mockImplementation(
+      // @ts-ignore
+      () => now
+    );
+  });
+
+  afterEach(() => {
+    spiedDate.mockRestore();
+  });
+
+  const testTable = [
+    [0, 'case1: mon', { must: 1, other: 1 }, reviewers, ['cr7']],
+    [1, 'case1: tue', { must: 1, other: 1 }, reviewers, ['zlatan']],
+    [2, 'case1: wed', { must: 1, other: 1 }, reviewers, ['cr7']],
+    [3, 'case1: thu', { must: 1, other: 1 }, reviewers, ['zlatan']],
+    [4, 'case1: fri', { must: 1, other: 1 }, reviewers, ['cr7']],
+    [5, 'case1: sat', { must: 1, other: 1 }, reviewers, ['aubameyang']],
+    [6, 'case1: sun', { must: 1, other: 1 }, reviewers, ['aubameyang']],
+  ] as Array<[number, string, NumOfReviewersType, ReviewerType[], string[]]>;
+
+  test.each(testTable)(
+    '%i: %s',
+    (num, testName, numOfReviewers, reviewers, ...expected) => {
+      now.setDate(now.getDate() + num);
+      const selectedReviewers = selectReviewers(numOfReviewers, reviewers, {
+        draft: false,
+        requested_reviewers: [],
+        title: '',
+        user: { login: 'messi' },
+      }).sort();
+      expect(expected.some((e) => _.isEqual(e.sort(), selectedReviewers))).toBe(
+        true
+      );
+    }
+  );
+});
+
+describe('skipCondition', () => {
+  const testTable = [
+    [
+      'PR is draft',
+      {
+        draft: true,
+        requested_reviewers: [],
+        title: '',
+        user: { login: '' },
+      },
+      {
+        reviewers: [],
+        numOfReviewers: { must: 0, other: 1 },
+      },
+      true,
+    ],
+    [
+      'PR title includes WIP',
+      {
+        draft: false,
+        requested_reviewers: [],
+        title: 'WIP amazing changes',
+        user: { login: '' },
+      },
+      {
+        reviewers: [],
+        numOfReviewers: { must: 0, other: 1 },
+      },
+      true,
+    ],
+    [
+      'PR title includes wip',
+      {
+        draft: false,
+        requested_reviewers: [],
+        title: 'wip amazing changes',
+        user: { login: '' },
+      },
+      {
+        reviewers: [],
+        numOfReviewers: { must: 0, other: 1 },
+      },
+      true,
+    ],
+    [
+      'num of reviewers are already more than numOfReviewers  ',
+      {
+        draft: false,
+        requested_reviewers: ['messi', 'cr7'],
+        title: '',
+        user: { login: '' },
+      },
+      {
+        reviewers: [],
+        numOfReviewers: { must: 0, other: 1 },
+      },
+      true,
+    ],
+  ] as Array<[string, PR, Config, boolean]>;
+
+  test.each(testTable)('%s', (name, pr, config, expected) => {
+    expect(skipCondition(pr, config)).toBe(expected);
+  });
 });
