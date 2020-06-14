@@ -7,58 +7,28 @@ describe('validate config test', () => {
         reviewers: [
           {
             name: 'messi',
-            kind: 'must',
+            group: 'barcelona',
             day: ['everyday'],
           },
           {
             name: 'iniesta',
+            group: 'barcelona',
             day: ['mon', 'tue', 'wed'],
           },
           {
             name: 'cr7',
+            group: 'juventus',
             day: ['weekday'],
           },
           {
             name: 'zlatan',
+            group: 'milan',
             day: ['fri'],
           },
-          {
-            name: 'aubameyang',
-            day: ['weekend'],
-          },
         ],
-        numOfReviewers: { must: 1, other: 2 },
+        numOfReviewers: { barcelona: 1, juventus: 1, milan: 1 },
       })
     ).toBe(true);
-  });
-
-  test('invalid config: invalid must numOfReviewers', () => {
-    expect(
-      validateConfig({
-        reviewers: [
-          {
-            name: 'messi',
-            kind: 'must',
-            day: ['everyday'],
-          },
-        ],
-        numOfReviewers: { must: 2, other: 0 },
-      })
-    ).toBe(false);
-  });
-
-  test('invalid config: invalid other numOfReviewers', () => {
-    expect(
-      validateConfig({
-        reviewers: [
-          {
-            name: 'messi',
-            day: ['everyday'],
-          },
-        ],
-        numOfReviewers: { must: 0, other: 2 },
-      })
-    ).toBe(false);
   });
 
   test('invalid config: 0 numOfReviewers in total', () => {
@@ -69,6 +39,37 @@ describe('validate config test', () => {
       })
     ).toBe(false);
   });
+
+  test('invalid config: numOfReviewers must be provided for all groups', () => {
+    expect(
+      validateConfig({
+        reviewers: [
+          {
+            name: 'messi',
+            group: 'barcelona',
+            day: ['everyday'],
+          },
+          {
+            name: 'iniesta',
+            group: 'barcelona',
+            day: ['mon', 'tue', 'wed'],
+          },
+          {
+            name: 'cr7',
+            group: 'juventus',
+            day: ['weekday'],
+          },
+          {
+            name: 'zlatan',
+            group: 'milan',
+            day: ['fri'],
+          },
+        ],
+        numOfReviewers: { barcelona: 1 },
+      })
+    ).toBe(false);
+  });
+
 
   test('invalid config: invalid day', () => {
     expect(
@@ -82,15 +83,6 @@ describe('validate config test', () => {
           },
         ],
         numOfReviewers: { must: 1, other: 0 },
-      })
-    ).toBe(false);
-  });
-
-  test('invalid config: duplicated name', () => {
-    expect(
-      validateConfig({
-        reviewers: [{ name: 'messi' }, { name: 'messi' }],
-        numOfReviewers: { must: 0, other: 1 },
       })
     ).toBe(false);
   });

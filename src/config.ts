@@ -22,12 +22,12 @@ const listOfValidDay = [
 
 export type ReviewerType = {
   name: string;
-  group: string[];
+  group: string;
   day?: Array<typeof listOfValidDay[number]>;
 };
 
 export type NumOfReviewersType = {
-  [key in ReviewerType['group'][number]]: number;
+  [key in ReviewerType['group']]: number;
 };
 
 export type Config = {
@@ -58,19 +58,10 @@ export const validateConfig = (config: Config): boolean => {
     return false;
   }
 
-  // numOfReviewers must be provided
-  if (
-    !config.numOfReviewers ||
-    !config.numOfReviewers.must ||
-    !config.numOfReviewers.other
-  ) {
-    error('Invalid numOfReviewers');
-    return false;
-  }
+  const groups = _.uniq(config.reviewers.map((r) => r.group));
 
-  // validate duplicated name
-  if (_.uniqBy(config.reviewers, 'name').length !== config.reviewers.length) {
-    error('Duplicated name');
+  if (groups.some((g) => !config.numOfReviewers[g])) {
+    error('numOfGroup must be provided for all groups');
     return false;
   }
   return true;

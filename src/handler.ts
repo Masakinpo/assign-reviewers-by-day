@@ -5,43 +5,31 @@ import _ from 'lodash';
 import { Config, dayOfWeek, NumOfReviewersType, ReviewerType } from './config';
 
 type ReviewerDict = {
-  must: {
-    [key in typeof dayOfWeek[number]]: ReviewerType[];
-  };
-  other: {
+  [key in ReviewerType['group']]: {
     [key in typeof dayOfWeek[number]]: ReviewerType[];
   };
 };
 
-const mustReviewerCond = (r: ReviewerType): boolean => r.kind === 'must';
-const otherReviewerCond = (r: ReviewerType): boolean =>
-  !r.kind || r.kind !== 'must';
-
 export const generateDictFromConfig = (
   reviewers: ReviewerType[]
 ): ReviewerDict => {
-  const reviewerDict = {};
-  dayOfWeek.forEach((d) => {
-    const availableReviewers = reviewers.filter(
-      (r) =>
-        !r.day ||
-        r.day.includes(d) ||
-        r.day.includes('everyday') ||
-        ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
-        (d !== 'sat' && d !== 'sun' && r.day.includes('weekday'))
-    );
-    _.set<ReviewerDict>(
-      reviewerDict,
-      ['must', d],
-      availableReviewers.filter((r) => mustReviewerCond(r))
-    );
-    _.set<ReviewerDict>(
-      reviewerDict,
-      ['other', d],
-      availableReviewers.filter((r) => otherReviewerCond(r))
-    );
+  const groups = _.uniq(reviewers.map((r) => r.group));
+  const reviewerDict: ReviewerDict = {};
+  groups.forEach((g) => {
+    dayOfWeek.forEach((d) => {
+      const availableReviewers = reviewers.filter(
+        (r) =>
+          r.group === g ||
+          !r.day ||
+          r.day.includes(d) ||
+          r.day.includes('everyday') ||
+          ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
+          (d !== 'sat' && d !== 'sun' && r.day.includes('weekday'))
+      );
+      _.set<ReviewerDict>(reviewerDict, [g, d], availableReviewers);
+    });
   });
-  return reviewerDict as ReviewerDict;
+  return reviewerDict;
 };
 
 export const selectReviewers = (
@@ -51,24 +39,19 @@ export const selectReviewers = (
 ): string[] => {
   const reviewerDict = generateDictFromConfig(reviewers);
 
-  // select must reviewers
-  const selectedMustReviewers: ReviewerType[] = _.sampleSize(
-    reviewerDict.must[
-      format(new Date(), 'iii').toLowerCase() as typeof dayOfWeek[number]
-    ].filter((r) => r.name != PR.user.login),
-    numOfReviewers.must
-  );
-  // select other reviewers
-  const selectedOtherReviewers: ReviewerType[] = _.sampleSize(
-    reviewerDict.other[
-      format(new Date(), 'iii').toLowerCase() as typeof dayOfWeek[number]
-    ].filter((r) => r.name != PR.user.login),
-    numOfReviewers.other
-  );
+  const selectedReviewers: ReviewerType[] = [];
+  Object.keys(reviewerDict).forEach((d) => {
+    selectedReviewers.concat(
+      _.sampleSize(
+        reviewerDict[d][
+          format(new Date(), 'iii').toLowerCase() as typeof dayOfWeek[number]
+        ].filter((r) => r.name != PR.user.login),
+        numOfReviewers[d]
+      )
+    );
+  });
 
-  return [...selectedMustReviewers, ...selectedOtherReviewers].map(
-    (r) => r.name
-  );
+  return selectedReviewers.map((r) => r.name);
 };
 
 const setReviewers = async (
