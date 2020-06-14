@@ -14035,7 +14035,7 @@ exports.validateConfig = (config) => {
     }
     const groups = lodash_1.default.uniq(config.reviewers.map((r) => r.group));
     if (groups.some((g) => !config.numOfReviewers[g])) {
-        core_1.error('numOfGroup must be provided for all groups');
+        core_1.error(`numOfGroup must be provided for all groups: ${JSON.stringify(config)}`);
         return false;
     }
     return true;
