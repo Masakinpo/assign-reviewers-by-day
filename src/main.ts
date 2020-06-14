@@ -7,11 +7,13 @@ export const run = async (): Promise<void> => {
   try {
     const token = getInput('repo-token', { required: true });
     const config = getConfig();
-    if (!!config && validateConfig(config)) {
-      await assignReviewers(new Octokit({ auth: token }), config);
+    const isValidConfig = !!config && validateConfig(config);
+    if (isValidConfig) {
+      return await assignReviewers(new Octokit({ auth: token }), config!);
     }
+    return setFailed(`invalid config (${JSON.stringify(config)})`);
   } catch (error) {
-    setFailed(error.message);
+    setFailed(error);
   }
 };
 

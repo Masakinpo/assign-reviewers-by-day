@@ -60,7 +60,13 @@ export const validateConfig = (config: Config): boolean => {
 
   const groups = _.uniq(config.reviewers.map((r) => r.group));
 
-  if (groups.some((g) => !config.numOfReviewers[g])) {
+  if (
+    groups.some(
+      (g) =>
+        !Object.keys(config.numOfReviewers).includes(g) ||
+        Number.isInteger(config.numOfReviewers[g])
+    )
+  ) {
     error(
       `numOfGroup must be provided for all groups: ${JSON.stringify(config)}`
     );
