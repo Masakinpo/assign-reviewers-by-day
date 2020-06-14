@@ -44,7 +44,7 @@ reviewers:
       - fri
   - name: ginji
     day:
-      - any
+      - everyday
   - name: jones
     day:
       - weekend
