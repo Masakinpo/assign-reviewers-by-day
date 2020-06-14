@@ -2,6 +2,7 @@ reviewers:
   - name: masakinpo
     group: contributers
   - name: shintaro2844
-    group: contributers
+    group: other
 numOfReviewers:
   - contributers: 1
+  - other: 1
