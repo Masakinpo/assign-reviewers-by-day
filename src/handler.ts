@@ -17,15 +17,16 @@ export const generateDictFromConfig = (
   const reviewerDict: ReviewerDict = {};
   groups.forEach((g) => {
     dayOfWeek.forEach((d) => {
-      const availableReviewers = reviewers.filter(
-        (r) =>
-          r.group === g ||
-          !r.day ||
-          r.day.includes(d) ||
-          r.day.includes('everyday') ||
-          ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
-          (d !== 'sat' && d !== 'sun' && r.day.includes('weekday'))
-      );
+      const availableReviewers = reviewers
+        .filter((r) => r.group === g)
+        .filter(
+          (r) =>
+            !r.day ||
+            r.day.includes(d) ||
+            r.day.includes('everyday') ||
+            ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
+            (d !== 'sat' && d !== 'sun' && r.day.includes('weekday'))
+        );
       _.set<ReviewerDict>(reviewerDict, [g, d], availableReviewers);
     });
   });
@@ -38,19 +39,18 @@ export const selectReviewers = (
   PR: PR
 ): string[] => {
   const reviewerDict = generateDictFromConfig(reviewers);
-
-  const selectedReviewers: ReviewerType[] = [];
-  Object.keys(reviewerDict).forEach((d) => {
-    selectedReviewers.concat(
-      _.sampleSize(
-        reviewerDict[d][
+  let selectedReviewers: ReviewerType[] = [];
+  Object.keys(reviewerDict).forEach((key) => {
+    selectedReviewers = [
+      ...selectedReviewers,
+      ..._.sampleSize<ReviewerType>(
+        reviewerDict[key][
           format(new Date(), 'iii').toLowerCase() as typeof dayOfWeek[number]
-        ].filter((r) => r.name != PR.user.login),
-        numOfReviewers[d]
-      )
-    );
+        ].filter((r) => r.name !== PR.user.login),
+        numOfReviewers[key]
+      ),
+    ];
   });
-
   return selectedReviewers.map((r) => r.name);
 };
 

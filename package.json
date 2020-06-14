@@ -1,6 +1,6 @@
 {
   "name": "assign-reviwers-by-day",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Add reviewers to pull requests for each of the week",
   "main": "index.js",
   "repository": {
