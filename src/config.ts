@@ -20,22 +20,22 @@ const listOfValidDay = [
   'everyday',
 ] as const;
 
-export type ReviewerType = {
+export type ReviewerType<T extends string> = {
   name: string;
-  group: string;
+  group: T;
   day?: Array<typeof listOfValidDay[number]>;
 };
 
-export type NumOfReviewersType = {
-  [key in Config['reviewers'][number]['group']]: number;
+export type NumOfReviewersType<T extends string> = {
+  [key in T]: number;
 };
 
-export type Config = {
-  reviewers: ReviewerType[];
-  numOfReviewers: NumOfReviewersType[];
+export type Config<T extends string[]> = {
+  reviewers: ReviewerType<T[number]>[];
+  numOfReviewers: NumOfReviewersType<T[number]>[];
 };
 
-export const getConfig = (): Config | null => {
+export const getConfig = (): Config<string[]> | null => {
   const configPath = getInput('config', { required: true });
 
   try {
@@ -47,7 +47,7 @@ export const getConfig = (): Config | null => {
   return null;
 };
 
-export const validateConfig = (config: Config): boolean => {
+export const validateConfig = (config: Config<string[]>): boolean => {
   // validate day
   if (
     config.reviewers.some(

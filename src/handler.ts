@@ -4,17 +4,17 @@ import { format } from 'date-fns';
 import _ from 'lodash';
 import { Config, dayOfWeek, NumOfReviewersType, ReviewerType } from './config';
 
-type ReviewerDict = {
-  [key in ReviewerType['group']]: {
-    [key in typeof dayOfWeek[number]]: ReviewerType[];
+type ReviewerDict<T extends string> = {
+  [key in T]: {
+    [key in typeof dayOfWeek[number]]: ReviewerType<T>[];
   };
 };
 
-export const generateDictFromConfig = (
-  reviewers: ReviewerType[]
-): ReviewerDict => {
-  const groups = _.uniq(reviewers.map((r) => r.group));
-  const reviewerDict: ReviewerDict = {};
+export const generateDictFromConfig = <T extends string>(
+  reviewers: ReviewerType<T>[]
+): ReviewerDict<T> => {
+  const groups = _.uniq<T>(reviewers.map((r) => r.group));
+  const reviewerDict = {};
   groups.forEach((g) => {
     dayOfWeek.forEach((d) => {
       const availableReviewers = reviewers
@@ -27,20 +27,24 @@ export const generateDictFromConfig = (
             ((d === 'sat' || d === 'sun') && r.day.includes('weekend')) ||
             (d !== 'sat' && d !== 'sun' && r.day.includes('weekday'))
         );
-      _.set<ReviewerDict>(reviewerDict, [g, d], availableReviewers);
+      _.set<ReviewerDict<typeof groups[number]>>(
+        reviewerDict,
+        [g, d],
+        availableReviewers
+      );
     });
   });
-  return reviewerDict;
+  return reviewerDict as ReviewerDict<typeof groups[number]>;
 };
 
-export const selectReviewers = (
-  numOfReviewers: NumOfReviewersType[],
-  reviewers: ReviewerType[],
+export const selectReviewers = <T extends string>(
+  numOfReviewers: NumOfReviewersType<T>[],
+  reviewers: ReviewerType<T>[],
   PR: PR
 ): string[] => {
-  const reviewerDict = generateDictFromConfig(reviewers);
+  const reviewerDict = generateDictFromConfig<T>(reviewers);
   let selectedReviewers: string[] = [];
-  Object.keys(reviewerDict).forEach((group) => {
+  (Object.keys(reviewerDict) as T[]).forEach((group) => {
     const availableNames = reviewerDict[group][
       format(new Date(), 'iii').toLowerCase() as typeof dayOfWeek[number]
     ]
@@ -126,7 +130,7 @@ export const skipCondition = (PR: PR | null): boolean => {
 
 export const assignReviewers = async (
   octokit: Octokit,
-  config: Config
+  config: Config<string[]>
 ): Promise<void> => {
   const { numOfReviewers, reviewers } = config;
   const [owner, repo] = (process.env.GITHUB_REPOSITORY || '').split('/');
