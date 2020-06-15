@@ -7,7 +7,7 @@ import {
 import { Config, NumOfReviewersType, ReviewerType } from '../src/config';
 import _ from 'lodash';
 
-const barcelona: ReviewerType[] = [
+const barcelona: ReviewerType<'barcelona'>[] = [
   {
     name: 'messi',
     group: 'barcelona',
@@ -20,7 +20,7 @@ const barcelona: ReviewerType[] = [
   },
 ];
 
-const reviewers: ReviewerType[] = [
+const reviewers: ReviewerType<'barcelona' | 'juventus' | 'arsenal'>[] = [
   ...barcelona,
   {
     name: 'cr7',
@@ -74,7 +74,7 @@ describe('generateDictFromConfig test', () => {
   });
 });
 
-const reviewers2: ReviewerType[] = [
+const reviewers2: ReviewerType<'gods'>[] = [
   {
     name: 'messi',
     group: 'gods',
@@ -174,8 +174,8 @@ describe('selectReviewers', () => {
     [
       number,
       string,
-      NumOfReviewersType[],
-      ReviewerType[],
+      NumOfReviewersType<'gods'>[],
+      ReviewerType<'gods'>[],
       string[],
       string[],
       string[]
@@ -225,7 +225,14 @@ describe('selectReviewers: some reviewer is already requested', () => {
     [5, 'case2: sat', [{ gods: 2 }], reviewers2, ['cr7'], ['zlatan']],
     [6, 'case2: sun', [{ gods: 2 }], reviewers2, ['cr7'], ['zlatan']],
   ] as Array<
-    [number, string, NumOfReviewersType[], ReviewerType[], string[], string[]]
+    [
+      number,
+      string,
+      NumOfReviewersType<'gods'>[],
+      ReviewerType<'gods'>[],
+      string[],
+      string[]
+    ]
   >;
 
   test.each(testTable)(
@@ -270,7 +277,15 @@ describe('selectReviewers: exclude author', () => {
     [4, 'fri', [{ barcelona: 1 }], barcelona, []],
     [5, 'sat', [{ barcelona: 1 }], barcelona, []],
     [6, 'sun', [{ barcelona: 1 }], barcelona, []],
-  ] as Array<[number, string, NumOfReviewersType[], ReviewerType[], string[]]>;
+  ] as Array<
+    [
+      number,
+      string,
+      NumOfReviewersType<'barcelona'>[],
+      ReviewerType<'barcelona'>[],
+      string[]
+    ]
+  >;
 
   test.each(testTable)(
     '%i: %s',
